@@ -1,0 +1,258 @@
+:root {
+	--easy: #80ff80;
+	--normal: #80ffff;
+	--hard: #ff8080;
+	--lunatic: #c080ff;
+}
+* {
+	font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+	user-select: none;
+}
+#background {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: max(100vh, 630px);
+	width: max(100vw, 780px);
+	background-color: #191919;
+}
+#window {
+	position: absolute;
+	top: calc(50vh - 315px);
+	left: calc(50vw - 390px);
+	height: 630px;
+	width: 780px;
+	border-style: solid;
+	border-width: 1px;
+	background-color: #0c0c0c;
+	border-color: #0c0c0c;
+	z-index: 1;
+	cursor: none;
+}
+#div_loadScreenProgressBar {
+	width: 400px;
+	height: 20px;
+	color: #000000;
+	display: inline-block;
+}
+#table_controls {
+	position: absolute;
+	bottom: 45px;
+	left: 70px;
+	tr {
+		td {
+			vertical-align: middle;
+		}
+		td:nth-child(1), td:nth-child(3) {
+			width: 50px;
+			padding-right: 10px;
+			text-align: right;
+		}
+		td:nth-child(2), td:nth-child(4) {
+			width: 250px;
+			padding-left: 10px;
+			text-align: left;
+		}
+		th {
+			font-weight: 700;
+			text-align: center;
+		}
+	}
+}
+#table_upgrades {
+	position: absolute;
+	top: 90px;
+	left: 40px;
+	tr {
+		td {
+			vertical-align: top;
+			font-size: 15px;
+			width: 220px;
+			padding-left: 10px;
+			padding-right: 10px;
+			padding-bottom: 10px;
+		}
+	}
+}
+#table_records {
+	position: absolute;
+	top: 50px;
+	left: 40px;
+	tr {
+		th {
+			text-align: center;
+			font-weight: 700;
+			padding-top: 20px;
+			padding-bottom: 10px;
+		}
+		td {
+			vertical-align: top;
+			padding-left: 10px;
+			padding-right: 10px;
+			padding-bottom: 10px;
+			&:nth-child(1) {
+				width: 200px;
+				text-align: left;
+			}
+			&:not(:nth-child(1)) {
+				width: 100px;
+				text-align: right;
+			}
+			&:nth-child(2) {
+				color: var(--easy);
+			}
+			&:nth-child(3) {
+				color: var(--normal);
+			}
+			&:nth-child(4) {
+				color: var(--hard);
+			}
+			&:nth-child(5) {
+				color: var(--lunatic);
+			}
+		}
+	}
+}
+.userOption {
+	position: relative;
+	font-size: 25px;
+	transition: 0.2s;
+	&.active {
+		color: #8080ff;
+	}
+	&:not(.active) {
+		color: #808080;
+	}
+	&[data-menuWindow='chooseDifficulty'] {
+		&:nth-of-type(1)&.active {
+			color: var(--easy);
+		}
+		&:nth-of-type(2)&.active {
+			color: var(--normal);
+		}
+		&:nth-of-type(3)&.active {
+			color: var(--hard);
+		}
+		&:nth-of-type(4)&.active {
+			color: var(--lunatic);
+		}
+	}
+}
+#gameCanvas, #canvasBackground {
+	position: absolute;
+	top: 15px;
+	left: 15px;
+	height: 600px;
+	width: 500px;
+}
+#canvasBackground {
+	display: block;
+	filter: opacity(50%);
+}
+#div_autocollectionLineIndicator {
+	position: absolute;
+	border-top-style: solid;
+	border-top-width: 2px;
+	border-top-color: #ffffff;
+	width: 500px;
+	left: 15px; /* `top` is not stored here as it gets set by `startGame()` based on the autocollection height. */
+	text-align: right;
+	font-size: 16px;
+	color: #ffffff;
+	transition-duration: 0.5s;
+}
+#div_stageTitle1, #div_stageTitle2 {
+	position: absolute;
+	color: #ccccff;
+	opacity: 0;
+	transition-duration: 0.5s;
+}
+#div_playerSpellCard, #div_bossSpellCard {
+	position: absolute;
+	font-size: 18px;
+	font-style: italic;
+	text-decoration-line: underline;
+	text-decoration-style: solid;
+	text-decoration-thickness: 2px;
+	color: #ffffff;
+	opacity: 0;
+	transition-property: opacity;
+	transition-duration: 0.5s;
+}
+#gameSidebar {
+	table {
+		tr {
+			:nth-child(1) {
+				width: 120px;
+				text-align: left;
+				vertical-align: top;
+			}
+			:nth-child(2) {
+				width: 120px;
+				text-align: right;
+				vertical-align: top;
+			}
+		}
+	}
+}
+#gameOverScreen {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 630px;
+	width: 780px;
+	background-color: rgba(0, 0, 0, 0.5);
+	color: #ffffff;
+}
+#window_virtueCalculation {
+	text-align: center;
+	table {
+		tr {
+			td {
+				padding-bottom: 15px;
+				&:nth-child(1) {
+					width: 150px;
+					text-align: left;
+					color: #ccccff;
+				}
+			&:nth-child(2) {
+					width: 150px;
+					text-align: right;
+					color: #ccccff;
+				}
+			}
+		}
+	}
+}
+.creditsTable {
+	display: inline-block;
+	font-size: 16px;
+	tr {
+		td:nth-child(1) {
+			width: 135px;
+			padding-right: 15px;
+			text-align: right;
+			vertical-align: top;
+			&[colspan="2"] {
+				text-align: left;
+			}
+		}
+		td:nth-child(2) {
+			width: 435px;
+			padding-left: 15px;
+			text-align: left;
+			vertical-align: top;
+		}
+		th {
+			font-weight: 700;
+			padding-top: 20px;
+			text-align: center;
+		}
+		td {
+			padding-top: 8px;
+		}
+	}
+}
+a {
+	color: #8080ff;
+}

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="interface.css" />
+		<meta charset="utf-8"/>
+		<title>Ordinal Project 01: Unresponsive and Irresponsible Terraforming</title>
+		<script type="module" src="src/initialize.js"></script>
+		<link rel="preload" href="assets/img/item_lifepiece.png" as="image" />
+		<link rel="preload" href="assets/img/item_point.png" as="image" />
+		<link rel="preload" href="assets/img/item_power.png" as="image" />
+		<link rel="preload" href="assets/img/lexan.png" as="image" />
+		<link rel="preload" href="assets/img/luigin_front.png" as="image" />
+		<link rel="preload" href="assets/img/luigin.png" as="image" />
+		<link rel="preload" href="assets/img/stagebg1.png" as="image" />
+		<link rel="preload" href="assets/img/zenryaku.png" as="image" />
+	</head>
+	<body>
+		<div id="background"></div>
+		<div id="window">
+			<div id="window_initialize" style="display: block;">
+				<div style="position: relative; top: 150px; height: 480px; width: 780px; text-align: center; color: #ccccff;">
+					Loading audio assets...<br><br>
+					<div id="div_loadScreenProgressBar"></div>
+					<div id="button_initialize" class="userOption active" data-menuWindow="initialize" style="display: none;">Press [Z] to start</div>
+					<br>
+					<table id="table_controls">
+						<tr><th colspan="4">Controls</th></tr>
+						<tr><th colspan="2">In-Game</th><th colspan="2">Menus</th></tr>
+						<tr><td>←↑→↓</td><td>Move</td><td>Z</td><td>Select</td></tr>
+						<tr><td>Shift</td><td>Focus</td><td>↑</td><td>Next Option</td></tr>
+						<tr><td>Z</td><td>Shoot</td><td>↓</td><td>Previous Option</td></tr>
+						<tr><td>Esc</td><td>Pause</td><td>Esc</td><td>Return</td></tr>
+						<tr><th colspan="4">Note: This game does not have mobile support.</th></tr>
+					</table>
+				</div>
+			</div>
+			<div id="window_mainMenu" style="display: none;">
+				<div style="text-align: center;">
+					<span style="color: #ccccff; font-weight: 700; font-size: 10px;">1st Project Anarchy Zone</span>
+					<br>
+					<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Unresponsive and Irresponsible Terraforming</span>
+				</div>
+				<br>
+				<div class="userOption active" data-menuWindow="mainMenu" id="button_mainMenu_gameStart" style="left: 20px; width: 400px;">Game Start</div>
+				<br>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_upgrades" style="left: 40px; width: 400px;">Upgrades</div>
+				<br>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_records" style="left: 60px; width: 400px;">Records</div>
+				<br>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_credits" style="left: 80px; width: 400px;">Credits</div>
+				<br>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_wipeSave" style="left: 100px; width: 400px;">Wipe Save</div>
+			</div>
+			<div id="window_chooseDifficulty" style="display: none; text-align: center;">
+				<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Choose a Difficulty:</span>
+				<div class="userOption active" data-menuWindow="chooseDifficulty" id="button_mainMenu_easy">
+					<span style="font-size: 18px;">Third Annuation of Arbitrariness</span>
+					<br>
+					<span style="font-size: 10px;">Easy Mode</span>
+					<br>
+					<span style="font-size: 14px;">The simplest celebration and one of the best.</span>
+				</div>
+				<br>
+				<div class="userOption" data-menuWindow="chooseDifficulty" id="button_mainMenu_normal">
+					<span style="font-size: 18px;">First Annuation of Tradition</span>
+					<br>
+					<span style="font-size: 10px;">Normal Mode</span>
+					<br>
+					<span style="font-size: 14px;">A festival the founders would have wanted.</span>
+				</div>
+				<br>
+				<div class="userOption" data-menuWindow="chooseDifficulty" id="button_mainMenu_hard">
+					<span style="font-size: 18px;">Fifth Annuation of Tribulation</span>
+					<br>
+					<span style="font-size: 10px;">Hard Mode</span>
+					<br>
+					<span style="font-size: 14px;">The spectacle mankind was unworthy of.</span>
+				</div>
+				<br>
+				<div class="userOption" data-menuWindow="chooseDifficulty" id="button_mainMenu_lunatic">
+					<span style="font-size: 18px;">Second Annuation of Ultimatums</span>
+					<br>
+					<span style="font-size: 10px;">Lunatic Mode</span>
+					<br>
+					<span style="font-size: 14px;">When the minister laughs, the party is doomed.</span>
+				</div>
+			</div>
+			<div id="window_game" style="display: none; overflow: hidden;">
+				<div id="canvasBackground"></div>
+				<canvas id="gameCanvas" height="600" width="500"></canvas>
+				<div id="div_bossHideableData" style="position: absolute; top: 0; left: 0; width: 780px;"> <!-- Use this to mass hide data when the player is high up the screen. -->
+					<div id="div_bossPhasesLeft" style="position: absolute; top: 25px; left: 30px; width: 20px; font-size: 20px; text-align: center; opacity: 0; font-weight: 900;">3</div>
+					<div id="div_bossLifeBar" style="position: absolute; top: 36px; left: 60px; height: 3px; width: 440px; opacity: 0;"></div>
+					<div id="div_bossLifeBarName" style="position: absolute; top: 42px; left: 60px; font-size: 15px; opacity: 0;"></div>
+					<div id="div_bossLifeBarBonusLabel" style="position: absolute; top: 42px; right: 420px; font-size: 15px; color: #cccc00;">Bonus</div>
+					<div id="div_bossLifeBarBonusValue" style="position: absolute; top: 42px; right: 350px; font-size: 15px; color: #cccc00;"></div>
+					<div id="div_bossSpellTimer" style="position: absolute; top: 80px; right: 490px; text-align: right;"><span id="span_bossTimerIntegerPart" style="font-size: 24px;"></span><span id="span_bossTimerFractionalPart" style="font-size: 16px;"></span></div>
+					<div id="div_bossSpellCard" style="top: 400px; max-width: 450px; right: 280px; text-align: right; font-size: 18px;"></div>
+				</div>
+				<div id="div_bossSpellCaptureText" style="position: absolute; top: 120px; left: 65px; width: 400px; text-align: center; font-size: 22px; color: #cccc00; transition: 0.3s;"></div>
+				<div id="div_autocollectionLineIndicator">Item Autocollection Line!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				<div id="div_stageTitle1" style="top: 115px; left: 115px; font-size: 16px;">Calendar Stage</div>
+				<div id="div_stageTitle2" style="top: 155px; left: 65px; width: 400px; font-size: 24px; text-align: center;">Radiant Judgment in the Sixth Year<br>~ Tectonic Jubilee</div>
+				<div id="div_playerSpellCard" style="top: 425px; right: 280px; text-align: right; font-size: 18px; text-decoration-color: #00ff00;">Radiation "Alpha Scattering"</div>
+				<div id="div_bossPositionIndicator" style="position: absolute; top: 615px; text-align: center; width: 40px; font-size: 12px;">Enemy</div>
+				<div id="div_bossPositionIndicator2" style="position: absolute; top: 615px; text-align: center; width: 40px; font-size: 12px;">Enemy</div>
+				<div id="div_dialogueName" style="position: absolute; top: 360px; left: 40px; height: 30px; width: 450px; font-size: 20px; color: #ffffff; opacity: 0;"></div>
+				<div id="div_dialogueText" style="position: absolute; top: 390px; left: 40px; height: 200px; width: 450px; font-size: 18px; background: rgba(0, 0, 0, 0.6); color: #ffffff; opacity: 0;"></div>
+				<div id="div_dialogueBossTitle" style="position: absolute; top: 280px; left: 135px; width: 350px; text-align: center; transition-property: opacity; transition-duration: 0.75s; opacity: 0;">
+					<span id="span_dialogueBossTitle" style="font-size: 14px;"></span>
+					<br>
+					<span id="span_dialogueBossName" style="font-size: 18px;"></span>
+				</div>
+				<div id="gameSidebar" style="text-align: center; position: absolute; top: 10px; right: 4px; height: 600px; width: 250px;">
+					<span id="sidebar_difficulty" style="font-size: 18px;"></span>
+					<table>
+						<tr style="color: #cccccc;">
+							<td>High Score</td>
+							<td id="sidebar_hiscore">0</td>
+						</tr>
+						<tr style="color: #6666ff;">
+							<td>Score</td>
+							<td id="sidebar_score">0</td>
+						</tr>
+						<tr style="color: #6666ff;">
+							<td>Next Bonus</td>
+							<td><span id="sidebar_bonusScore">500 000</span><br><span id="sidebar_bonusType"></span></td>
+						</tr>
+						<tr style="color: #cc33cc;">
+							<td>Lives</td>
+							<td id="sidebar_lives"></td>
+						</tr>
+						<tr style="color: #33cc33;">
+							<td>Spell Cards</td>
+							<td id="sidebar_bombs"></td>
+						</tr>
+						<tr style="color: #ff3333;">
+							<td>Power</td>
+							<td id="sidebar_power">1.00 / 4.00</td>
+						</tr>
+						<tr style="color: #6666ff;">
+							<td>Value</td>
+							<td id="sidebar_value">10 000</td>
+						</tr>
+						<tr style="color: #cccc99;">
+							<td>Graze</td>
+							<td id="sidebar_graze">0</td>
+						</tr>
+						<tr style="color: #ffffff;">
+							<td></td>
+							<td id="sidebar_debug"></td>
+						</tr>
+						<tr style="color: #ffffff;">
+							<td></td>
+							<td id="sidebar_fps">50 fps</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div id="window_pauseMenu" style="position: absolute; display: none; text-align: center; height: 630px; width: 780px; background-color: #000000cc;">
+				<span style="color: #ccccff; font-weight: 700; font-size: 30px; padding-top: 10px;">Pause</span>
+				<br>
+				<div class="userOption active" data-menuWindow="pauseMenu" id="button_pauseMenu_continueGame" style="left: 30px; width: 400px; text-align: left;">Continue the Game</div>
+				<br>
+				<div class="userOption" data-menuWindow="pauseMenu" id="button_pauseMenu_returnToMainMenu" style="left: 50px; width: 400px; text-align: left;">Return to Main Menu</div>
+				<br>
+				<div class="userOption" data-menuWindow="pauseMenu" id="button_pauseMenu_startOver" style="left: 70px; width: 400px; text-align: left;">Start Over</div>
+			</div>
+			<div id="window_gameOver" style="position: absolute; display: none; text-align: center; height: 630px; width: 780px; background-color: #000000cc;">
+				<span style="color: #ccccff; font-weight: 700; font-size: 30px; padding-top: 10px;">Game Over!</span>
+				<br>
+				<div class="userOption active" data-menuWindow="gameOver" id="button_gameOver_continueGame" style="left: 30px; width: 400px; text-align: left;">Continue</div>
+				<br>
+				<div class="userOption" data-menuWindow="gameOver" id="button_gameOver_returnToMainMenu" style="left: 50px; width: 400px; text-align: left;">Return to Main Menu</div>
+				<br>
+				<div class="userOption" data-menuWindow="gameOver" id="button_gameOver_startOver" style="left: 70px; width: 400px; text-align: left;">Start Over</div>
+			</div>
+			<div id="window_virtueCalculation" style="display: none;">
+				<span style="color: #ccccff; font-weight: 700; font-size: 30px; padding-top: 10px;">Virtue Gain Breakdown</span>
+				<br>
+				<table style="display: inline-block;">
+					<tr>
+						<td>Score</td>
+						<td id="table_virtueCalculation_score"></td>
+					</tr>
+					<tr>
+						<td>Stage Progress</td>
+						<td id="table_virtueCalculation_progress"></td>
+					</tr>
+					<tr>
+						<td>Difficulty</td>
+						<td id="table_virtueCalculation_difficulty"></td>
+					</tr>
+					<tr>
+						<td>Upgrades</td>
+						<td id="table_virtueCalculation_upgrades"></td>
+					</tr>
+					<tr>
+						<td>Achievements</td>
+						<td id="table_virtueCalculation_achievements"></td>
+					</tr>
+					<tr style="font-weight: 700;">
+						<td>Virtue Gained</td>
+						<td id="table_virtueCalculation_total"></td>
+					</tr>
+				</table>
+			</div>
+			<div id="window_ending" style="display: none; position: absolute; top: 15px; left: 140px; text-align: left; color: #ffffff; height: 600px; width: 500px;">
+				<p id="p_ending0" style="display: block;">--- The Capitol ---</p>
+				<p id="p_ending1" style="display: block;">At the end of a promenade stood two figures.</p>
+				<p id="p_ending2" style="display: none; color: #0000ff;">Hmm... those fireworks weren't that bad.</p>
+				<p id="p_ending3" style="display: none; color: #ff0000;">At least the Capitol is safe...</p>
+				<p id="p_ending4" style="display: none; color: #ff0000;">What was going through your mind trying to set the magmaworks off again?</p>
+				<p id="p_ending5" style="display: none;">In the end, Luigin was unable to persuade Lexan.</p>
+				<p id="p_ending6" style="display: none;">However, Annuation Mountain did not erupt anyway due to an obstruction.</p>
+				<p id="p_ending7" style="display: none; color: #0000ff;">I am making the decisions which are the best for this world. You of all people should understand that.</p>
+				<p id="p_ending8" style="display: none; color: #0000ff;">In any case the show couldn't go ahead anyway. There was a slight blockage you never warned me about...</p>
+				<p id="p_ending9" style="display: none;">With their ability to manipulate uncertainty, Zenryaku can observe any point in space. And yet, when a smart and wise politician makes a decision, they must always ask, 'what next?' Thus, it was inevitable that mistakes would be made.</p>
+				<p id="p_ending10" style="display: none; color: #0000ff;">Oh well. It doesn't matter now.</p>
+				<p id="p_ending11" style="display: none; color: #0000ff;">About the meteor shower soon... I am sure there is a specialist somewhere that can change a flight path or two...</p>
+				<p id="p_ending12" style="display: none; color: #ff0000;">Ah, you never give up, do you...</p>
+				<p id="p_ending13" style="display: none;"></p>
+				<div class="userOption active" data-menuWindow="ending" style="position: absolute; bottom: 20px; left: 20px; width: 460px; text-align: center;">Press [Z] to continue</div>
+			</div>
+			<div id="window_badEnding" style="display: none; position: absolute; top: 15px; left: 140px; text-align: left; color: #ffffff; height: 600px; width: 500px;">
+				<p>Realising that Lexan was an opponent far out of his league, Luigin retreated to the Capitol.</p>
+				<p style="color: #008000;">Lexan is too strong! Hopefully the fireworks don't cause too much damage...</p>
+				<p>It was then that Luigin's superior entered the room.</p>
+				<p style="color: #ff9900;">This laboratory is going to be destroyed by earthquakes if that mountain erupts!</p>
+				<p style="color: #ff9900;">Get back out there and go deal with it.</p>
+				<p>Try clearing the game without continues for a better ending!</p>
+			</div>
+			<div id="window_upgrades" style="display: none; color: #ccccff;">
+				<div style="text-align: center;">
+					<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Upgrades</span>
+				</div>
+				<div style="position: absolute; top: 50px; right: 180px; color: #00cccc;">Available Virtue:</div>
+				<div style="position: absolute; top: 50px; right: 30px; color: #00cccc;" id="span_upgrades_availableVirtue"></div>
+				<table id="table_upgrades">
+					<tr>
+						<td class="userOption active" data-menuWindow="upgrades" id="button_pauseMenu_upgrade0"><span id="span_upgrade0Name" style="float: left;"></span><span id="span_upgrade0Level" style="float: right;"></span></td>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade1"><span id="span_upgrade1Name" style="float: left;"></span><span id="span_upgrade1Level" style="float: right;"></span></td>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade2"><span id="span_upgrade2Name" style="float: left;"></span><span id="span_upgrade2Level" style="float: right;"></span></td>
+					<tr>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade3"><span id="span_upgrade3Name" style="float: left;"></span><span id="span_upgrade3Level" style="float: right;"></span></td>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade4"><span id="span_upgrade4Name" style="float: left;"></span><span id="span_upgrade4Level" style="float: right;"></span></td>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade5"><span id="span_upgrade5Name" style="float: left;"></span><span id="span_upgrade5Level" style="float: right;"></span></td>
+					</tr>
+					<tr>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade6"><span id="span_upgrade6Name" style="float: left;"></span><span id="span_upgrade6Level" style="float: right;"></span></td>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade7"><span id="span_upgrade7Name" style="float: left;"></span><span id="span_upgrade7Level" style="float: right;"></span></td>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade8"><span id="span_upgrade8Name" style="float: left;"></span><span id="span_upgrade8Level" style="float: right;"></span></td>
+					</tr>
+					<tr>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade9"><span id="span_upgrade9Name" style="float: left;"></span><span id="span_upgrade9Level" style="float: right;"></span></td>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade10"><span id="span_upgrade10Name" style="float: left;"></span><span id="span_upgrade10Level" style="float: right;"></span></td>
+						<td class="userOption" data-menuWindow="upgrades" id="button_pauseMenu_upgrade11"><span id="span_upgrade11Name" style="float: left;"></span><span id="span_upgrade11Level" style="float: right;"></span></td>
+					</tr>
+					<tr>
+						<td colspan="3" class="userOption" data-menuWindow="upgrades" id="button_upgrades_gameOver" style="font-size: 20px; text-align: center;">Refund All Upgrades</td>
+					</tr>
+					<tr>
+						<td colspan="3" id="span_upgrades_selectedUpgradeName" style="text-align: center; color: #cccc00; height: 30px; font-weight: 700;"></td>
+					</tr>
+					<tr>
+						<td colspan="3" id="span_upgrades_selectedUpgradeLevel" style="text-align: center; color: #cccc00; height: 30px;"></td>
+					</tr>
+					<tr>
+						<td colspan="3" id="span_upgrades_selectedUpgradeCurrentEffect" style="text-align: center; color: #cccc00; height: 60px;"></td>
+					</tr>
+					<tr>
+						<td colspan="3" id="span_upgrades_selectedUpgradeNextEffect" style="text-align: center; color: #cccc00; height: 60px;"></td>
+					</tr>
+					<tr>
+						<td colspan="3" id="span_upgrades_selectedUpgradeCost" style="text-align: center; color: #cccc00; height: 30px;"></td>
+					</tr>
+				</table>
+				<div style="position: absolute; bottom: 30px; left: 40px; width: 700px; text-align: center; font-style: italic;">Note: these upgrades are purely optional and not required to progress through the game.<br><br>The game is balanced around without using any upgrades.</div>
+			</div>
+			<div id="window_records" style="display: none; text-align: center; color: #ccccff; height: 630px; width: 780px;">
+				<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Records</span>
+				<table id="table_records">
+					<tr>
+						<th>Category</th>
+						<th>Easy</th>
+						<th>Normal</th>
+						<th>Hard</th>
+						<th>Lunatic</th>
+					</tr>
+					<tr>
+						<th colspan="5">With Upgrades</th>
+					</tr>
+					<tr id="tr_records_highScore">
+						<td>High Score</td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr id="tr_records_maxSpareItems">
+						<td>Max Spare Lives / Bombs</td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr id="tr_records_spellCardsCaptured">
+						<td>Spell Cards Captured</td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th colspan="5">Without Upgrades</th>
+					</tr>
+					<tr id="tr_upgradelessRecords_highScore">
+						<td>High Score</td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr id="tr_upgradelessRecords_maxSpareItems">
+						<td>Max Spare Lives / Bombs</td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr id="tr_upgradelessRecords_spellCardsCaptured">
+						<td>Spell Cards Captured</td><td></td><td></td><td></td><td></td>
+					</tr>
+				</table>
+			</div>
+			<div id="window_credits" style="display: none; text-align: center; color: #ccccff; height: 630px; width: 780px; cursor: auto;">
+				<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Credits</span>
+				<br>
+				<table class="creditsTable" id="div_creditsTable0">
+					<tr><td colspan="2">This game, including the user interface, stage design and Spell Card system, is inspired by ZUN's <i>Touhou&nbsp;Project</i> franchise. The single in-game stage (Calendar Stage) is modelled after a Touhou-style Extra Stage.</td></tr>
+					<tr><td colspan="2"><i>Ordinal Project</i> takes its name from the <i>OMCCDV</i> community, which itself takes its name (but is not otherwise associated with) PatcailMemer's <i>Ordinal Markup</i>.</td></tr>
+					<tr><th colspan="2">Enemy & Character Art</th></tr>
+					<tr><td colspan="2">Luigin's unused portrait is based on <a href="https://en.touhouwiki.net/wiki/Unstable_and_Unimaginable_Power/Characters#Jun_Rhodes-Rose" target="_blank">Jun Rhodes-Rose</a>.</td></tr>
+					<tr><td colspan="2">Lexan's art is based on <a href="https://ninesols.wiki.gg/wiki/Ji" target="_blank">Ji</a>.</td></tr>
+					<tr><td colspan="2">All other art is original.</td></tr>
+					<tr><th colspan="2">Backgrounds</th></tr>
+					<tr><td colspan="2">All backgrounds are either copyright-free stock images or original art.</td></tr>
+					<tr><th colspan="2">Music & Sound Effects</th></tr>
+					<tr><td>Title Theme</td><td><a href="https://soundcloud.com/user-214278566/overture-of-the-sprites-augusta-iaponicorum-ost?in=user-214278566/sets/augusta-iaponicorum-ost" target="_blank">Tokiko Tatsunagi - Overture of the Sprites</a></td></tr>
+					<tr><td>Stage Theme</td><td><a href="https://www.youtube.com/watch?v=YXZqocZvVEI" target="_blank">Tokiko Tatsunagi - An Addendum to the Past</a></td></tr>
+					<tr><td>Lexan's Theme</td><td><a href="https://www.youtube.com/watch?v=D70E0qSaCKM" target="_blank">Tokiko Tatsunagi - Augusta Iaponicorum</a></td></tr>
+					<tr><td>Ending Theme</td><td><a href="https://www.youtube.com/watch?v=GN-AwkrnYS0" target="_blank">Tokiko Tatsunagi - A Preface to the Future</a></td></tr>
+					<tr><td colspan="2">All sound effects are sourced from official Touhou games, primarily <i>Touhou&nbsp;Kishinjou&nbsp;~&nbsp;Double&nbsp;Dealing&nbsp;Character</i>.</td></tr>
+				</table>
+				<table class="creditsTable" id="div_creditsTable1" style="display: none;">
+					<tr><td colspan="2">This game is dedicated to OMCCDV.</td></tr>
+					<tr><td colspan="2">A special mention goes to epic_ducks / elysian_cats.<br>In only one more day, this game could have been his too.<br>We will remember him.</td></tr>
+					<tr><td colspan="2">Lastly, thank <i>you</i> so much for playing this game!</td></tr>
+					<tr><td></td><td></td></tr> <!-- Layout row - must have at least one row with 2 actual columns to ensure correct width. -->
+				</table>
+				<div id="div_creditsTableNumber" style="position: absolute; bottom: 8px; right: 8px;">1 / 2 | Use arrow keys to advance</div>
+			</div>
+		</div>
+	</body>
+</html>
