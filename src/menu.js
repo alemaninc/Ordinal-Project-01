@@ -243,9 +243,9 @@ export function keyDown(event) {
 				}
 			} else if (activeWindow === "credits") {
 				if (event.key === "ArrowLeft") {
-					advanceCredits(-1);
+//					advanceCredits(-1);
 				} else if (event.key === "ArrowRight") {
-					advanceCredits(1);
+//					advanceCredits(1);
 				}
 			} else {
 				if (event.key === "ArrowUp") {
