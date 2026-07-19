@@ -3,14 +3,15 @@ export const audioContext = new AudioContext();
 // Stores all audio which may be played as a `buffer` to be passed to `playAudio`.
 const audio = {};
 // Lists all the audio files which must be loaded by their file name (excluding the file ending).
-export const requiredAudio = ["bgm_boss", "bgm_ending", "bgm_stage", "bgm_title", "se_big", "se_bonus", "se_boon00", "se_boon01", "se_cancel00", "se_cardget", "se_cat00", "se_ch00", "se_ch02", "se_damage00", "se_don00", "se_enep00", "se_enep01", "se_etbreak", "se_extend", "se_fault", "se_graze", "se_invalid", "se_item00", "se_kira00", "se_lazer00", "se_lgods1", "se_lgods2", "se_lgods4", "se_nep00", "se_ok00", "se_pause", "se_pldead00", "se_pldead01", "se_plst00", "se_power0", "se_power1", "se_powerup", "se_select00", "se_tan00", "se_tan02", "se_timeout"];
+export const requiredAudio = ["bgm_boss", "bgm_ending", "bgm_stage", "bgm_title", "se_big", "se_bonus", "se_boon00", "se_boon01", "se_cancel00", "se_cardget", "se_cat00", "se_ch00", "se_ch02", "se_damage00", "se_don00", "se_enep00", "se_enep01", "se_enep02", "se_etbreak", "se_extend", "se_fault", "se_graze", "se_invalid", "se_item00", "se_kira00", "se_lazer00", "se_lgods1", "se_lgods2", "se_lgods4", "se_nep00", "se_ok00", "se_pause", "se_pldead00", "se_pldead01", "se_plst00", "se_power0", "se_power1", "se_powerup", "se_select00", "se_tan00", "se_timeout"];
 // We store this to be able to calculate how many files have been loaded for the loading screen.
 export var audioFilesLoaded = 0;
 // Retrieves a `buffer` for `playAudio` given a file path (e.g. "assets/audio/stage.mp3").
-async function loadAudio(url) {
-  let response = await fetch(url);
+async function loadAudio(id) {
+  let response = await fetch("assets/audio/" + id + ".mp3");
   let arrayBuffer = await response.arrayBuffer();
-  return await audioContext.decodeAudioData(arrayBuffer);
+  audio[id] = await audioContext.decodeAudioData(arrayBuffer);
+  audioFilesLoaded++;
 }
 // Creates a "source" to play a sound and plays it.
 function playAudioFromBuffer(buffer, volume = 1) {
@@ -78,9 +79,8 @@ export function playSingleAudio(id, label, volume = 1) { // If multiple objects 
   }
 }
 // Preloads all required audio.
-export async function loadRequiredAudio() {
+export function loadRequiredAudio() {
 	for (let id of requiredAudio) {
-		audio[id] = await loadAudio("assets/audio/" + id + ".mp3");
-		audioFilesLoaded++;
+		loadAudio(id);
 	}
 }

@@ -1,4 +1,4 @@
-import { pauseBGM, playAudio, playBGM, stopBGM, unpauseBGM } from "./audio.js";
+import { pauseBGM, playAudio, playBGM, playSingleAudio, stopBGM, unpauseBGM } from "./audio.js";
 import { advanceDialogue, Bosses, clearCurrentDialogue, currentDialogueId, currentDialogueOpenTime, dialogueList } from "./boss_data.js";
 import { hsltohex } from "./color_converter.js";
 import { activeKeys, openMainMenu, openMenuWindow } from "./menu.js";
@@ -326,6 +326,7 @@ export function useContinue() {
 	gameOverScreenActive = false;
 	playerPosition[0] = 0;
 	playerPosition[1] = 250;
+	collectedScoreBonuses = 0;
 	openMenuWindow("game");
 	unpauseBGM();
 }
@@ -623,7 +624,7 @@ function processFrame() {
 						enemies[id].HP -= playerBullets[id2].damage;
 					}
 					score += 10;
-					playAudio("se_damage00", 0.2);
+					playSingleAudio("se_damage00", "enemydamage" + frame, 0.08);
 					delete playerBullets[id2];
 				}
 			}

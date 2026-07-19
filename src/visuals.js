@@ -13,7 +13,7 @@ export var imageFilesLoaded = 0;
 async function loadImage(id) {
   images[id] = new Image();
   images[id].src = "assets/img/" + id + (id.includes(".") ? "" : ".png");
-  images[id].onload = function() {console.log(id); imageFilesLoaded++;}
+  images[id].onload = function() {imageFilesLoaded++;}
 }
 // Preloads all required images.
 export async function loadRequiredImages() {
@@ -177,7 +177,7 @@ export function memoryShardRenderFunction(timer) {
 		let imageNum = [1, 2, 2, 1][phase];
 		let isReflected = phase < 2;
 		// Shows the safe zone.
-		drawCircle(position, 100, "#00000000", "#cc000019");
+		drawCircle(position, 100, "#00000000", "#cc000028");
 		// Shows the shard.
 		drawImage("enemy_memoryshard" + imageNum, position[0], position[1], 0, 1, isReflected);
 		// Shows the timer.
@@ -209,12 +209,12 @@ function currentBackground() {
 	} else if (frame < 18100) { // The third and fourth stage background use the same image, but the third background is heavily zoomed in whereas the fourth isn't.
 		url = "url(assets/img/stagebg3.jpg)";
 		size = 4;
-		opacity = Math.min((frame - Bosses.zenryaku.frameDefeated) / 400, 0.33, 45.25 - frame / 400);
-		position = "-30px -" + (720 - frame / 25) + "px";
+		opacity = Math.min((frame - Bosses.zenryaku.frameDefeated) / 400, 0.5, 45.25 - frame / 400);
+		position = "-" + (25 + 15 * Math.sin(Math.max(frame, frame * 0.04 + 12120) / 500)) + "px -" + (1220 - Math.max(frame, frame * 0.04 + 12120) / 15) + "px"; // Starts moving properly at frame 12625
 	} else {
 		url = "url(assets/img/stagebg3.jpg)";
 		size = 2;
-		opacity = Math.min(frame / 1000 - 18.1, 0.125);
+		opacity = Math.min(frame / 1000 - 18.1, 0.2);
 		position = "-150px -" + (20 + Math.sin(frame / 100) * 20) + "px";
 	}
 	return {url, size, opacity, position};
@@ -283,7 +283,6 @@ export function drawCanvas() {
 	}
 	// 2. Draw the player
 	drawImage("luigin_front", playerPosition[0], playerPosition[1] + 10, (activeKeys.ArrowRight ? 0.15 : 0) - (activeKeys.ArrowLeft ? 0.15 : 0));
-	console.log(playerPosition);
 	if (activeKeys.Shift) { // show hitbox if focused
 		let playerHitboxRenderFunction = circularRenderFunction(playerHitboxRadius, "#990000");
 		playerHitboxRenderFunction(playerPosition);
@@ -405,20 +404,25 @@ export function drawCanvas() {
 		dialoguePortraitVisibilities.boss = clampNumber(dialoguePortraitVisibilities.boss - 0.05, dialoguePortraitVisibilities.bossTarget, dialoguePortraitVisibilities.boss + 0.05);
 		if (dialogueList[currentDialogueId].speaker === "Luigin") {
 			if (currentBoss.bossId !== undefined) {
-				drawImage(currentBoss.bossId, 250 - dialoguePortraitVisibilities.boss * 225, dialoguePortraitVisibilities.boss * 30 - 90, 0, 0.6, false, dialoguePortraitVisibilities.boss);
+				drawImage(currentBoss.bossId, 200 - dialoguePortraitVisibilities.boss * 75, dialoguePortraitVisibilities.boss * -15 - 75, 0, 0.6, false, dialoguePortraitVisibilities.boss);
 			}
-			drawImage("luigin", dialoguePortraitVisibilities.player * 225 - 250, dialoguePortraitVisibilities.player * 30 - 90, 0, 0.6, true, dialoguePortraitVisibilities.player);
+			drawImage("luigin", dialoguePortraitVisibilities.player * 75 - 200, dialoguePortraitVisibilities.player * -15 - 75, 0, 0.6, true, dialoguePortraitVisibilities.player);
 		} else {
-			drawImage("luigin", dialoguePortraitVisibilities.player * 225 - 250, dialoguePortraitVisibilities.player * 30 - 90, 0, 0.6, true, dialoguePortraitVisibilities.player);
+			drawImage("luigin", dialoguePortraitVisibilities.player * 75 - 200, dialoguePortraitVisibilities.player * -15 - 75, 0, 0.6, true, dialoguePortraitVisibilities.player);
 			if (currentBoss.bossId !== undefined) {
-				drawImage(currentBoss.bossId, 250 - dialoguePortraitVisibilities.boss * 225, dialoguePortraitVisibilities.boss * 30 - 90, 0, 0.6, false, dialoguePortraitVisibilities.boss);
+				drawImage(currentBoss.bossId, 200 - dialoguePortraitVisibilities.boss * 75, dialoguePortraitVisibilities.boss * -15 - 75, 0, 0.6, false, dialoguePortraitVisibilities.boss);
 			}
 		}
 	}
 	// Also draws the boss sprite for a spell card background.
-	if (currentBoss.isInSpellCard && numberIsBounded(25, currentBoss.currentAttackTime, 75)) {
-		let progress = (currentBoss.currentAttackTime < 42) ? (currentBoss.currentAttackTime * 0.06 - 2.5) : (currentBoss.currentAttackTime < 59) ? 0 : (currentBoss.currentAttackTime * 0.06 - 3.5);
+	if (currentBoss.isInSpellCard && numberIsBounded(20, currentBoss.currentAttackTime, 100)) {
+		let progress = ((currentBoss.currentAttackTime < 40) ? (currentBoss.currentAttackTime * 0.05 - 2) : (currentBoss.currentAttackTime < 80) ? 0 : (currentBoss.currentAttackTime * 0.05 - 4)) + (currentBoss.currentAttackTime - 60) * 0.005;
 		drawImage(currentBoss.bossId, progress * -400, progress * 100, 0, 0.9);
+	}
+	// And Rin's sprite~
+	if (currentBoss.isInSpellCard && (currentBoss.phase === 7) && numberIsBounded(80, currentBoss.currentAttackTime, 160)) {
+		let progress = ((currentBoss.currentAttackTime < 100) ? (currentBoss.currentAttackTime * 0.05 - 5) : (currentBoss.currentAttackTime < 140) ? 0 : (currentBoss.currentAttackTime * 0.05 - 7)) + (currentBoss.currentAttackTime - 120) * 0.005;
+		drawImage("lexan2", progress * -400, progress * 100, 0, 0.9);
 	}
 	// Finally, update the sidebar.
 	document.getElementById("sidebar_score").innerText = formatInteger(Math.min(score, 999999999));

@@ -324,7 +324,7 @@ export const Bosses = {
 				name: "Unity Sign \"Ministry of Anarchy\"",
 				HP: 1800,
 				guaranteedScore: 250000,
-				captureScore: 1500000,
+				captureScore: 1250000,
 				dropList: {power: 30, point: 30, lifepiece: 1},
 				maxFrames: 2250,
 				nextFloor: undefined,
@@ -552,7 +552,7 @@ export const Bosses = {
 				name: "Magic Sign \"Wave of Four Paths\"",
 				HP: 2000,
 				guaranteedScore: 250000,
-				captureScore: 1500000,
+				captureScore: 1750000,
 				dropList: {power: 30, point: 30, lifepiece: 1},
 				maxFrames: 2400,
 				colours: ["#00ff00", "#ff3333", "#3333ff", "#ff33ff"],
@@ -745,7 +745,7 @@ export const Bosses = {
 				name: "Ellipticity \"The Opposition's Four-Dimensional Timeline\"",
 				HP: 1500,
 				guaranteedScore: 250000,
-				captureScore: 2000000,
+				captureScore: 2250000,
 				dropList: {power: 30, point: 30, lifepiece: 1},
 				maxFrames: 2550,
 				behaviourFunction: function(t) {
@@ -859,7 +859,7 @@ export const Bosses = {
 				name: "Fission Orb \"Solar Wind of the Revolution\"",
 				HP: 1800,
 				guaranteedScore: 250000,
-				captureScore: 2000000,
+				captureScore: 2500000,
 				dropList: {power: 30, point: 30, lifepiece: 1},
 				maxFrames: 2300,
 				behaviourFunction: function(t) {
@@ -1084,7 +1084,7 @@ export const Bosses = {
 				name: "Delusion \"A Grand Tour's False Potential\"",
 				HP: 2500,
 				guaranteedScore: 250000,
-				captureScore: 2500000,
+				captureScore: 2750000,
 				dropList: {power: 16, point: 16, lifepiece: 1},
 				maxFrames: 4300,
 				rinId: undefined,
@@ -1244,7 +1244,7 @@ export const Bosses = {
 				name: "New Age \"Magma Fireworks\"",
 				HP: 1700,
 				guaranteedScore: 250000,
-				captureScore: 2500000,
+				captureScore: 3000000,
 				dropList: {power: 36, point: 36, extend: 1},
 				maxFrames: 3200,
 				explosiveShot: function(targetX, cinderPhase) {
@@ -1254,7 +1254,7 @@ export const Bosses = {
 					let totalLavaBullets = [27, 30, 33, 36][difficulty];
 					let lavaVerticalMaxSpeed = [7, 7.5, 8.1, 9][difficulty];
 					let lavaHorizontalMaxSpeed = [0.33, 0.44, 0.5, 0.5][difficulty];
-					let cinderRingSize = [16, 20, 22, 24][difficulty];
+					let cinderRingSize = [8, 9, 8, 9][difficulty];
 					let cinderMaxSpeed = [3, 4, 5, 6][difficulty];
 					let startPosition = addVectors(enemies[currentBoss.enemyId].position, randomPolarVector(0, 5));
 					let v = [(targetX - startPosition[0]) / 60, (300 - startPosition[1]) / 60];
@@ -1295,12 +1295,14 @@ export const Bosses = {
 									}
 								}, circularRenderFunction(4, hsltohex(hue, 100, 45), hsltohex(hue, 100, 50)), radialCollisionCheck(4));
 								if (this.position[1] < explosionHeight) {
-									playAudio("se_tan02");
-									for (let bulletNum = 0; bulletNum < cinderRingSize; bulletNum++) {
-										let angle = cinderPhase + Math.PI * 2 * bulletNum / cinderRingSize;
-										createBullet(addVectors(this.position, polarToCartesian(5, angle)), function(t) {
-											this.position = addVectors(this.position, polarToCartesian(cinderMaxSpeed * ((bulletNum % 2 === 0) ? 0.67 : 1) * (1 - Math.exp(-t * 0.025)), angle));
-										}, circularRenderFunction(4, hsltohex(hue, 100, 35), hsltohex(hue, 100, 50)), radialCollisionCheck(4));
+									playAudio("se_enep02");
+									for (let ringNum = 0; ringNum < [3, 3, 4, 4][difficulty]; ringNum++) {
+										for (let bulletNum = 0; bulletNum < cinderRingSize; bulletNum++) {
+											let angle = cinderPhase + Math.PI * (bulletNum * 2 + ringNum) / cinderRingSize;
+											createBullet(addVectors(this.position, polarToCartesian(5, angle)), function(t) {
+												this.position = addVectors(this.position, polarToCartesian(cinderMaxSpeed * (6 - ringNum) / 6 * (1 - Math.exp(-t * 0.025)), angle));
+											}, circularRenderFunction(4, hsltohex(hue, 100, 35), hsltohex(hue, 100, 50)), radialCollisionCheck(4));
+										}
 									}
 									this.position[0] = 1000;
 								}
@@ -1318,8 +1320,8 @@ export const Bosses = {
 					// Periodically sweeps out about two-thirds of the board with explosive shots, like those of magma elementals except they create less lava bullets which travel more slowly but with a much higher horizontal range.
 					// These shots also create fireworks, which fly vertically upwards and explode creating circular cinder waves at a constant phase.
 					let shotSpacing = [60, 45, 36, 30][difficulty];
-					let shotMaxX = [75, 120, 150, 165][difficulty];
-					let shotInterval = [20, 15, 12, 10][difficulty];
+					let shotMaxX = [110, 130, 150, 170][difficulty];
+					let shotInterval = [18, 15, 12, 10][difficulty];
 					let waveInterval = [450, 450, 450, 450][difficulty];
 					if (((t - 80) % shotInterval === 1) && (this.currentShotX < shotMaxX)) {
 						this.explosiveShot(this.currentShotX * this.waveOrientation, this.cinderPhase);
@@ -1345,7 +1347,7 @@ export const Bosses = {
 				HP: Number.MIN_VALUE, // Not used, but makes the boss health bar appear full during the spell.
 				isSurvival: true,
 				guaranteedScore: 500000,
-				captureScore: 4280000,
+				captureScore: 4000000,
 				dropList: {point: 100, fullpower: 1},
 				maxFrames: 5600,
 				createWallBullet: function(startPosition, startVelocityX, startVelocityY) {
@@ -1425,7 +1427,6 @@ export const Bosses = {
 					} else if (t === 150) { // ... and then teleports him to be right above the screen so that this card's item drops work correctly.
 						currentBoss.targetPosition = [0, -400];
 						enemies[currentBoss.enemyId].position = [0, -400];
-						currentBoss.currentAttackTime += 2300;
 					}
 					// In the first phase, creates ten sets of white walls which close in from all four directions.
 					// The centres of adjacent walls are 200 pixels apart.
@@ -1512,7 +1513,7 @@ export const Bosses = {
 				name: "\"Exotic Matter World of Universal Gravitation\"",
 				HP: 9000,
 				guaranteedScore: 1000000,
-				captureScore: 9999990,
+				captureScore: 9000000,
 				dropList: {},
 				maxFrames: 9860,
 				slowDefeat: true,
@@ -1538,7 +1539,7 @@ export const Bosses = {
 					Bosses.lexan.isDefeated = true;
 					if (continuesLeft === 3) { // If no continues have been used
 						scheduleUnclearableStageEvent(70, function() {
-							startDialogue(42);
+							startDialogue(44);
 							beginCutscene();
 						});
 					} else {
@@ -1853,12 +1854,12 @@ export const dialogueList = {
 	},
 	11: {
 		speaker: "Lexan",
-		text: "Instead of these primitive, artificial fireworks, the whole world would witness a meteor shower rising from the depths of the earth.",
+		text: "The whole world would witness a meteor shower rising from the depths of the earth. It was no mere celebration - it was glory upon glory!",
 		maxFrames: 300
 	},
 	12: {
 		speaker: "Lexan",
-		text: "But after the second Annuation, it collapsed and never erupted again.",
+		text: "But alas... after the second Annuation, it collapsed and never erupted again.",
 		maxFrames: 300,
 		onAdvance: function() {
 			hideBossTitleCard();
@@ -1866,191 +1867,205 @@ export const dialogueList = {
 		}
 	},
 	13: {
+		speaker: "Lexan",
+		text: "And thus we must make do with these primitive, artificial \"fireworks\".",
+		maxFrames: 300,
+		onAdvance: function() {
+			hideBossTitleCard();
+			startDialogue(14);
+		}
+	},
+	14: {
 		speaker: "Luigin",
 		text: "You mean...",
 		maxFrames: 300
 	},
-	14: {
+	15: {
 		speaker: "Luigin",
 		text: "You rebuilt it for this?",
 		maxFrames: 300
 	},
-	15: {
+	16: {
 		speaker: "Lexan",
 		text: "To give a straightforward and evasive answer, no one still lives here with that kind of power.",
 		maxFrames: 300
 	},
-	16: {
+	17: {
 		speaker: "Lexan",
 		text: "We at the Ministry were all sure that the Mountain would stay dormant year after year until the end of time.",
 		maxFrames: 300
 	},
-	17: {
+	18: {
 		speaker: "Lexan",
 		text: "That was, until the Chancemaker retrieved this artifact from the ruins of the Old World.",
 		maxFrames: 300
 	},
-	18: {
+	19: {
 		speaker: "Lexan",
 		text: "With this staff's power, we were able to recreate the Mountain.",
 		maxFrames: 300
 	},
-	19: {
+	20: {
 		speaker: "Lexan",
 		text: "So too, with its power, I can make it erupt in time for midnight.",
 		maxFrames: 300
 	},
-	20: {
+	21: {
 		speaker: "Lexan",
 		text: "Where is Zenryaku anyway?",
 		maxFrames: 300
 	},
-	21: {
+	22: {
 		speaker: "Luigin",
 		text: "I saw them at the bottom of the mountain.",
 		maxFrames: 300
 	},
-	22: {
+	23: {
 		speaker: "Luigin",
 		text: "They were stopping everyone from climbing up because of this show...",
 		maxFrames: 300
 	},
-	23: {
+	24: {
 		speaker: "Lexan",
 		text: "So that is why no one else has come here yet...",
 		maxFrames: 300
 	},
-	24: {
+	25: {
 		speaker: "Lexan",
-		text: "They too have complained that this is too dangerous.",
+		text: "Zenryaku too has complained that this is too dangerous.",
 		maxFrames: 300,
 	},
-	25: {
+	26: {
 		speaker: "Lexan",
 		text: "Foolish of you both, I must say.",
 		maxFrames: 300
 	},
-	26: {
+	27: {
 		speaker: "Luigin",
 		text: "Last time the Mountain erupted, it nearly destroyed the world!",
 		maxFrames: 300
 	},
-	27: {
+	28: {
 		speaker: "Lexan",
 		text: "The world is more stable now than it was then.",
 		maxFrames: 300
 	},
-	28: {
+	29: {
 		speaker: "Luigin",
 		text: "It has only been four years since then...",
 		maxFrames: 300
 	},
-	29: {
+	30: {
 		speaker: "Lexan",
 		text: "Four years is a long time.",
 		maxFrames: 300
 	},
-	30: {
+	31: {
 		speaker: "Lexan",
 		text: "And in any case, who is Zenryaku to tell me \"this might destroy the Capitol\"?",
 		maxFrames: 300
 	},
-	31: {
+	32: {
 		speaker: "Lexan",
 		text: "How is that any different from what their kind did...",
 		maxFrames: 300
 	},
-	32: {
+	33: {
 		speaker: "Lexan",
 		text: "...having abandoned it and left it to die?",
 		maxFrames: 300
 	},
-	33: {
+	34: {
 		speaker: "Lexan",
-		text: "This land is almost completely deserted now. With this show, I will breathe new life into it.",
+		text: "This land is almost completely deserted now. With this show, I will breathe new life into it. A life greater than lamenting the old world!",
 		maxFrames: 300
 	},
-	34: {
+	35: {
 		speaker: "Luigin",
 		text: "I can't allow this... I will get backup from the Capitol!",
 		maxFrames: 300
 	},
-	35: {
+	36: {
 		speaker: "Lexan",
 		text: "You get on with that then.",
 		maxFrames: 300
 	},
-	36: {
+	37: {
 		speaker: "Lexan",
-		text: "By the time you reach the Capitol, they will be watching the show!",
+		text: "By the time you reach the Capitol, they will all be watching the show!",
 		maxFrames: 300
 	},
-	37: {
+	38: {
 		speaker: "Luigin",
 		text: "Ah, there's not enough time...",
 		maxFrames: 300
 	},
-	38: {
+	39: {
 		speaker: "Luigin",
 		text: "Well, it doesn't matter. I will handle this myself!",
 		maxFrames: 300,
 		onAdvance: function() {
 			playBGM("bgm_boss", 24, 180.75);
-			startDialogue(39);
+			startDialogue(40);
 		}
 	},
-	39: {
+	40: {
 		speaker: "Lexan",
 		text: "I won't allow you to ruin the festival.",
 		maxFrames: 300
 	},
-	40: {
+	41: {
 		speaker: "Lexan",
 		text: "Standing before you is the Celestial of Exotic Matter, Potential, Plasma and Terraforming.",
 		maxFrames: 300
 	},
-	41: {
-		speaker: "Lexan",
-		text: "Now, begone and keep us in the dark ages no longer!",
-		maxFrames: 300,
-		onAdvance: function() {
-			endCutscene();
-			currentDialogueId = undefined;
-			skipPhases(0);
-		}
-	},
-	// Lexan's post-fight dialogue
 	42: {
-		speaker: "Luigin",
-		text: "See? This is the power of nuclear fusion!",
+		speaker: "Lexan",
+		text: "How dare you Capitolites try to desecrate this day!",
 		maxFrames: 300
 	},
 	43: {
 		speaker: "Lexan",
-		text: "Since when are you of all people so strong...",
-		maxFrames: 300
+		text: "Begone and keep us in the dark ages no longer!",
+		maxFrames: 300,
+		onAdvance: function() {
+			endCutscene();
+			currentDialogueId = undefined;
+//			skipPhases(0);
+		}
 	},
+	// Lexan's post-fight dialogue
 	44: {
 		speaker: "Luigin",
-		text: "Now, will you stop trying to blow up the Capitol?",
+		text: "See? This is the power of nuclear fusion!",
 		maxFrames: 300
 	},
 	45: {
 		speaker: "Lexan",
-		text: "Why, obviously not!",
+		text: "Since when are you of all people so strong...",
 		maxFrames: 300
 	},
 	46: {
+		speaker: "Luigin",
+		text: "Now, will you stop trying to blow up the Capitol?",
+		maxFrames: 300
+	},
+	47: {
+		speaker: "Lexan",
+		text: "Why, obviously not!",
+		maxFrames: 300
+	},
+	48: {
 		speaker: "Lexan",
 		text: "Your fireworks will never compare to the beauty of nature that is this mountain.",
 		maxFrames: 300
 	},
-	47: {
+	49: {
 		speaker: "Luigin",
 		text: "*sigh*",
 		maxFrames: 300
 	},
-	48: {
+	50: {
 		speaker: "Luigin",
 		text: "Let me go look for Zenryaku...",
 		maxFrames: 300,

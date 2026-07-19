@@ -975,7 +975,7 @@ function createSuperMagmaElemental() {
 		if (t > 1080) { // Exits the screen.
 			this.position[1] += (t - 1080) / 30;
 		}
-	}, magmaElementalRenderFunction(5.5), radialCollisionCheck(220), 2500, 100000, {extend: 1, power: 50, point: 50}, undefined, 600, undefined,
+	}, magmaElementalRenderFunction(5.5), radialCollisionCheck(220), 3000, 100000, {extend: 1, power: 50, point: 50}, undefined, 600, undefined,
 	{explosiveShotsLanded: 0, smallFireSeed: 0, largeFireSeed: 0})
 }
 
@@ -1029,7 +1029,7 @@ export const stageEvents = { // The usual stage effects are such that no more th
 		Bosses.lexan.isDefeated = false;
 	},
 	10: function() {
-//		skipFrames(0);
+//		skipFrames(18280);
 	},
 	100: function() {
 		playBGM("bgm_stage", 368, 389.8);

@@ -320,9 +320,6 @@ export function processVirtueGain() {
 	document.getElementById("table_virtueCalculation_difficulty").innerText = "× " + difficultyMultiplier;
 	virtueGained *= upgradeEffectValues.prestige;
 	document.getElementById("table_virtueCalculation_upgrades").innerText = "× " + upgradeEffectValues.prestige.toFixed(3);
-	let achievementMultiplier = 1;
-	virtueGained *= achievementMultiplier;
-	document.getElementById("table_virtueCalculation_achievements").innerText = "× " + achievementMultiplier;
 	virtueGained = Math.round(virtueGained);
 	document.getElementById("table_virtueCalculation_total").innerText = formatInteger(virtueGained);
 	persistentData.virtue += virtueGained;
