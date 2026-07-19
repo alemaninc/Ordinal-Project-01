@@ -406,6 +406,5 @@ export function drawCanvas() {
 	document.getElementById("sidebar_power").innerText = (power / 100).toFixed(2) + " / 4.00";
 	document.getElementById("sidebar_value").innerText = formatInteger(pointValue);
 	document.getElementById("sidebar_graze").innerText = formatInteger(graze);
-	document.getElementById("sidebar_debug").innerText = virtueProgressMultiplier().toFixed(3);
 	document.getElementById("sidebar_fps").innerText = Math.round(fps) + " fps";
 }
