@@ -890,6 +890,9 @@ function gameClock() {
 export function skipFrames(amount) {
 	frame += amount;
 	requiredFrames += amount;
+	if (amount > 9000) {
+		Bosses.zenryaku.frameDefeated = amount;
+	}
 	playBGM("bgm_stage", 368, 389.8, frame / 50 - 2);
 }
 // Skips boss phases.

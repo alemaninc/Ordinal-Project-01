@@ -18,7 +18,7 @@ export const Bosses = {
 		autocollectAtStart: true,
 		autocollectAtEnd: false,
 		renderFunction: function(position) {
-			drawImage("assets/img/zenryaku.png", position[0], position[1] + 15 * Math.sin(0.025 * frame), 0, 0.25);
+			drawImage("zenryaku", position[0], position[1] + 15 * Math.sin(0.025 * frame), 0, 0.25);
 		},
 		collisionCheckFunction: rectangularCollisionCheck(150, 125),
 		frameDefeated: 99999, // Set this to something else at time of defeat. Used for post-midboss enemy waves.
@@ -293,7 +293,7 @@ export const Bosses = {
 		autocollectAtStart: true,
 		autocollectAtEnd: true,
 		renderFunction: function(position) {
-			drawImage("assets/img/lexan.png", position[0], position[1] + 15 * Math.sin(0.025 * frame), 0, 0.25);
+			drawImage("lexan", position[0], position[1] + 15 * Math.sin(0.025 * frame), 0, 0.25);
 		},
 		collisionCheckFunction: rectangularCollisionCheck(150, 125),
 		isDefeated: false, // We use this for the virtue progress multiplier (so it doesn't think we are in a stage section if the stage is cleared).
@@ -1693,7 +1693,7 @@ export const Bosses = {
 	rin: {
 		id: undefined, // Stores the second Lexan's id
 		renderFunction: function(position) {
-			drawImage("assets/img/lexan2.png", position[0], position[1] + 15 * Math.sin(0.025 * frame), 0, 0.25, true);
+			drawImage("lexan2", position[0], position[1] + 15 * Math.sin(0.025 * frame), 0, 0.25, true);
 		}
 	}
 }

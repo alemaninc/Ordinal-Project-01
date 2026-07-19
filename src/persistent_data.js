@@ -252,7 +252,7 @@ export function virtueProgressMultiplier() {
 			[15000, 2.40], // The yin yang orbs from the fourth wave return
 			[15950, 2.50], // The three-spirit wave
 			[17025, 2.70], // The super magma elemental			
-			[18250, 3.00] // Lexan
+			[18250, 3.00], // Lexan
 			[99999, 3.00]
 		];
 		for (let pairNum = 0; pairNum < keyPairs.length; pairNum++) {

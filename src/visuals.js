@@ -4,14 +4,30 @@ import { activeKeys } from "./menu.js";
 import { virtueProgressMultiplier } from "./persistent_data.js";
 import { addVectors, clampNumber, formatInteger, layeredLinearGradient, multiplyVectors, numberIsBounded, polarToCartesian, predictableRandom, rotateVector } from "./utility.js";
 
+const images = {};
+// Lists all the image files which must be loaded by their file name (excluding the file ending if it is "png").
+export const requiredImages = ["enemy_amberorb", "enemy_ambershard1", "enemy_ambershard2", "enemy_eye", "enemy_magmaelemental", "enemy_memoryshard1", "enemy_memoryshard2", "enemy_ufo_i1", "enemy_ufo_i2", "enemy_ufo_l1", "enemy_ufo_l2", "enemy_ufo_o1", "enemy_ufo_o2", "enemy_ufo_t1", "enemy_ufo_t2", "enemy_ufo_z1", "enemy_ufo_z2", "enemy_witch", "item_bombpiece", "item_extend", "item_fullpower", "item_lifepiece", "item_point", "item_power", "item_spellcard", "lexan", "lexan2", "luigin_front", "luigin", "stagebg1", "stagebg2.jpg", "stagebg3.jpg", "zenryaku"];
+// We store this to be able to calculate how many files have been loaded for the loading screen.
+export var imageFilesLoaded = 0;
+// Retrieves an image and increments `imageFilesLoaded` once it is available.
+async function loadImage(id) {
+  images[id] = new Image();
+  images[id].src = "assets/img/" + id + (id.includes(".") ? "" : ".png");
+  images[id].onload = function() {console.log(id); imageFilesLoaded++;}
+}
+// Preloads all required images.
+export async function loadRequiredImages() {
+	for (let id of requiredImages) {
+		loadImage(id);
+	}
+}
+
 // Returns the horizontal and vertical offset corresponding to [250, 300] for any angle.
 function canvasOffset(angle) {
 	return [250 * Math.cos(angle) + 300 * Math.sin(angle), 300 * Math.cos(angle) - 250 * Math.sin(angle)];
 }
 // Draws an image on the canvas, at `zoom`x scale, centred at (`centreX`, `centreY`) and rotated `angle` radians clockwise, and possibly `reflect`ed.
-export function drawImage(url, centreX, centreY, angle = 0, zoom = 1, reflect = false, opacity = 1) {
-	let img = new Image();
-	img.src = url;
+export function drawImage(id, centreX, centreY, angle = 0, zoom = 1, reflect = false, opacity = 1) {
 	canvasContext.save();
 	canvasContext.translate(centreX, centreY);
 	if (angle !== 0) {
@@ -23,7 +39,10 @@ export function drawImage(url, centreX, centreY, angle = 0, zoom = 1, reflect = 
 	// Correct for origin being centre instead of top-left, and the dimensions of the image.
 	let offset = canvasOffset(angle);
 	canvasContext.globalAlpha = opacity;
-	canvasContext.drawImage(img, offset[0] * (reflect ? -1 : 1) - img.width * zoom / 2, offset[1] - img.height * zoom / 2, img.width * zoom, img.height * zoom);
+	if (images[id] === undefined) {
+		console.error(id);
+	}
+	canvasContext.drawImage(images[id], offset[0] * (reflect ? -1 : 1) - images[id].width * zoom / 2, offset[1] - images[id].height * zoom / 2, images[id].width * zoom, images[id].height * zoom);
 	canvasContext.globalAlpha = 1;
 	canvasContext.restore();
 }
@@ -109,18 +128,18 @@ export const amberShardRenderFunction = function(position) {
 	let phase = Math.floor((frame - this.creationTime) / 7) % 4;
 	let imageNum = [1, 2, 2, 1][phase];
 	let isReflected = phase < 2;
-	drawImage("assets/img/enemy_ambershard" + imageNum + ".png", position[0], position[1], 0, 1, isReflected);
+	drawImage("enemy_ambershard" + imageNum, position[0], position[1], 0, 1, isReflected);
 }
 // Renders an amber orb to show rotation in the screen's axis.
 export const amberOrbRenderFunction = function(position) {
-	drawImage("assets/img/enemy_amberorb.png", position[0], position[1], (frame - this.creationTime) / 25, 1);
+	drawImage("enemy_amberorb", position[0], position[1], (frame - this.creationTime) / 25, 1);
 }
 // Renders a UFO to show rotation in the vertical axis, and the correct lights for its shot type.
 export const UFORenderFunction = function(position) {
 	let phase = Math.floor((frame - this.creationTime) / 8) % 3;
 	let imageNum = (phase === 1) ? 1 : 2;
 	let isReflected = phase === 2;
-	drawImage("assets/img/enemy_ufo_" + this.type + imageNum + ".png", position[0], position[1], 0, 1, isReflected);
+	drawImage("enemy_ufo_" + this.type.toLowerCase() + imageNum, position[0], position[1], 0, 1, isReflected);
 }
 // Renders a spirit. This is just a circle, as spirits spawn the flames of their animation as bullets.
 export function spiritRenderFunction(outerColor, innerColor) {
@@ -130,14 +149,14 @@ export function spiritRenderFunction(outerColor, innerColor) {
 }
 // Renders a witch to face the right way.
 export const witchRenderFunction = function(position) {
-	drawImage("assets/img/enemy_witch.png", position[0], position[1], 0, 1, this.direction === 1);
+	drawImage("enemy_witch", position[0], position[1], 0, 1, this.direction === 1);
 }
 // Renders an eye to look at the player.
 export function eyeRenderFunction(rotationAngle = 0) {
 	return function(position) {
 		let lifetime = frame - this.creationTime;
 		let opacity = Math.min(lifetime / 40, 1);
-		drawImage("assets/img/enemy_eye.png", position[0], position[1], rotationAngle, undefined, undefined, opacity);
+		drawImage("enemy_eye", position[0], position[1], rotationAngle, undefined, undefined, opacity);
 		// Draw the pupil in the centre initially, and move to face the player after this.
 		let pupilDeflection = Math.max(0, Math.min(lifetime / 12, 5));
 		let pupilPosition = addVectors(position, polarToCartesian(pupilDeflection, angleToPlayer(position)));
@@ -148,7 +167,7 @@ export function eyeRenderFunction(rotationAngle = 0) {
 // Renders a magma elemental to rotate about the screen's axis.
 export function magmaElementalRenderFunction(size) {
 	return function(position) {
-		drawImage("assets/img/enemy_magmaelemental.png", position[0], position[1], (frame - this.creationTime) * 0.025, size);
+		drawImage("enemy_magmaelemental", position[0], position[1], (frame - this.creationTime) * 0.025, size);
 	}
 }
 // Renders a memory shard to show rotation in the vertical axis, draw the safe zone and indicate the timer.
@@ -160,7 +179,7 @@ export function memoryShardRenderFunction(timer) {
 		// Shows the safe zone.
 		drawCircle(position, 100, "#00000000", "#cc000019");
 		// Shows the shard.
-		drawImage("assets/img/enemy_memoryshard" + imageNum + ".png", position[0], position[1], 0, 1, isReflected);
+		drawImage("enemy_memoryshard" + imageNum, position[0], position[1], 0, 1, isReflected);
 		// Shows the timer.
 		canvasContext.beginPath();
 		canvasContext.strokeStyle = "#cc0000";
@@ -230,7 +249,7 @@ export function drawCanvas() {
 			let angle = Math.PI * 2 * predictableRandom(eyeId * 5 * currentBoss.phase) + frame / 125;
 			let maxOpacityFrame = eyeId * 100 + 1200;
 			let opacity = Math.max(0.5 - (frame - maxOpacityFrame) * (frame - maxOpacityFrame) / 2880000, 0);
-			drawImage("assets/img/enemy_eye.png", displacement * Math.sin(angle), displacement * -Math.cos(angle), angle, size, false, opacity);
+			drawImage("enemy_eye", displacement * Math.sin(angle), displacement * -Math.cos(angle), angle, size, false, opacity);
 		}
 	} else if ((currentBoss.bossId === "lexan") && currentBoss.isInSpellCard && (currentBoss.currentAttackTime > 25)) { // Lexan's background has 3 elements so we draw it directly to the canvas.
 		document.getElementById("canvasBackground").style.backgroundImage = "";
@@ -263,7 +282,8 @@ export function drawCanvas() {
 		document.getElementById("canvasBackground").style.transform = ((currentBoss.bossId === "zenryaku") && currentBoss.isInSpellCard && (currentBoss.currentAttackTime > 25)) ? ("rotate(" + ((frame / 2) % 360) + "deg)") : "";
 	}
 	// 2. Draw the player
-	drawImage("assets/img/luigin_front.png", playerPosition[0], playerPosition[1] + 10, (activeKeys.ArrowRight ? 0.15 : 0) - (activeKeys.ArrowLeft ? 0.15 : 0));
+	drawImage("luigin_front", playerPosition[0], playerPosition[1] + 10, (activeKeys.ArrowRight ? 0.15 : 0) - (activeKeys.ArrowLeft ? 0.15 : 0));
+	console.log(playerPosition);
 	if (activeKeys.Shift) { // show hitbox if focused
 		let playerHitboxRenderFunction = circularRenderFunction(playerHitboxRadius, "#990000");
 		playerHitboxRenderFunction(playerPosition);
@@ -291,7 +311,7 @@ export function drawCanvas() {
 	let itemIds = Object.keys(items);
 	for (let id of itemIds) {
 		try {
-			drawImage("assets/img/item_" + items[id].type + ".png", items[id].position[0], items[id].position[1]);
+			drawImage("item_" + items[id].type, items[id].position[0], items[id].position[1]);
 		} catch {}
 	}
 	// 6. Draw player and enemy bullets on the screen.
@@ -384,17 +404,21 @@ export function drawCanvas() {
 		dialoguePortraitVisibilities.player = clampNumber(dialoguePortraitVisibilities.player - 0.05, dialoguePortraitVisibilities.playerTarget, dialoguePortraitVisibilities.player + 0.05);
 		dialoguePortraitVisibilities.boss = clampNumber(dialoguePortraitVisibilities.boss - 0.05, dialoguePortraitVisibilities.bossTarget, dialoguePortraitVisibilities.boss + 0.05);
 		if (dialogueList[currentDialogueId].speaker === "Luigin") {
-			drawImage("assets/img/" + currentBoss.bossId + ".png", 250 - dialoguePortraitVisibilities.boss * 225, dialoguePortraitVisibilities.boss * 30 - 90, 0, 0.6, false, dialoguePortraitVisibilities.boss);
-			drawImage("assets/img/luigin.png", dialoguePortraitVisibilities.player * 225 - 250, dialoguePortraitVisibilities.player * 30 - 90, 0, 0.6, true, dialoguePortraitVisibilities.player);
+			if (currentBoss.bossId !== undefined) {
+				drawImage(currentBoss.bossId, 250 - dialoguePortraitVisibilities.boss * 225, dialoguePortraitVisibilities.boss * 30 - 90, 0, 0.6, false, dialoguePortraitVisibilities.boss);
+			}
+			drawImage("luigin", dialoguePortraitVisibilities.player * 225 - 250, dialoguePortraitVisibilities.player * 30 - 90, 0, 0.6, true, dialoguePortraitVisibilities.player);
 		} else {
-			drawImage("assets/img/luigin.png", dialoguePortraitVisibilities.player * 225 - 250, dialoguePortraitVisibilities.player * 30 - 90, 0, 0.6, true, dialoguePortraitVisibilities.player);
-			drawImage("assets/img/" + currentBoss.bossId + ".png", 250 - dialoguePortraitVisibilities.boss * 225, dialoguePortraitVisibilities.boss * 30 - 90, 0, 0.6, false, dialoguePortraitVisibilities.boss);
+			drawImage("luigin", dialoguePortraitVisibilities.player * 225 - 250, dialoguePortraitVisibilities.player * 30 - 90, 0, 0.6, true, dialoguePortraitVisibilities.player);
+			if (currentBoss.bossId !== undefined) {
+				drawImage(currentBoss.bossId, 250 - dialoguePortraitVisibilities.boss * 225, dialoguePortraitVisibilities.boss * 30 - 90, 0, 0.6, false, dialoguePortraitVisibilities.boss);
+			}
 		}
 	}
 	// Also draws the boss sprite for a spell card background.
 	if (currentBoss.isInSpellCard && numberIsBounded(25, currentBoss.currentAttackTime, 75)) {
 		let progress = (currentBoss.currentAttackTime < 42) ? (currentBoss.currentAttackTime * 0.06 - 2.5) : (currentBoss.currentAttackTime < 59) ? 0 : (currentBoss.currentAttackTime * 0.06 - 3.5);
-		drawImage("assets/img/" + currentBoss.bossId + ".png", progress * -400, progress * 100, 0, 0.9);
+		drawImage(currentBoss.bossId, progress * -400, progress * 100, 0, 0.9);
 	}
 	// Finally, update the sidebar.
 	document.getElementById("sidebar_score").innerText = formatInteger(Math.min(score, 999999999));
