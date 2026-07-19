@@ -10,7 +10,7 @@ import { amberShardRenderFunction, arrowBulletRenderFunction, blackHoleRenderFun
 export const Bosses = {
 	zenryaku: {
 		name: "Zenryaku",
-		title: "Anonymous A-to-Z",
+		title: "Eye Spy of a Mouldy Fry",
 		color: "#ff0000",
 		darkColor: "#800000",
 		hasPreBossDialogue: false,
