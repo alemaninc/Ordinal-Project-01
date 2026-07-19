@@ -402,15 +402,16 @@ export function drawCanvas() {
 	if (currentDialogueId !== undefined) {
 		dialoguePortraitVisibilities.player = clampNumber(dialoguePortraitVisibilities.player - 0.05, dialoguePortraitVisibilities.playerTarget, dialoguePortraitVisibilities.player + 0.05);
 		dialoguePortraitVisibilities.boss = clampNumber(dialoguePortraitVisibilities.boss - 0.05, dialoguePortraitVisibilities.bossTarget, dialoguePortraitVisibilities.boss + 0.05);
+		let boss = currentBoss.bossId ?? dialogueList[currentDialogueId].bossId;
 		if (dialogueList[currentDialogueId].speaker === "Luigin") {
-			if (currentBoss.bossId !== undefined) {
-				drawImage(currentBoss.bossId, 200 - dialoguePortraitVisibilities.boss * 75, dialoguePortraitVisibilities.boss * -15 - 75, 0, 0.6, false, dialoguePortraitVisibilities.boss);
+			if (boss !== undefined) {
+				drawImage(boss, 200 - dialoguePortraitVisibilities.boss * 75, dialoguePortraitVisibilities.boss * -15 - 75, 0, 0.6, false, dialoguePortraitVisibilities.boss);
 			}
 			drawImage("luigin", dialoguePortraitVisibilities.player * 75 - 200, dialoguePortraitVisibilities.player * -15 - 75, 0, 0.6, true, dialoguePortraitVisibilities.player);
 		} else {
 			drawImage("luigin", dialoguePortraitVisibilities.player * 75 - 200, dialoguePortraitVisibilities.player * -15 - 75, 0, 0.6, true, dialoguePortraitVisibilities.player);
-			if (currentBoss.bossId !== undefined) {
-				drawImage(currentBoss.bossId, 200 - dialoguePortraitVisibilities.boss * 75, dialoguePortraitVisibilities.boss * -15 - 75, 0, 0.6, false, dialoguePortraitVisibilities.boss);
+			if (boss !== undefined) {
+				drawImage(boss, 200 - dialoguePortraitVisibilities.boss * 75, dialoguePortraitVisibilities.boss * -15 - 75, 0, 0.6, false, dialoguePortraitVisibilities.boss);
 			}
 		}
 	}

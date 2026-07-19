@@ -20,7 +20,7 @@ function createYinYangOrb(targetPosition, streamingBulletMinTime, streamingBulle
 		[this.position, this.bezierT] = processBezierMotion([[targetPosition[0], -320], targetPosition, targetPosition, targetPosition, [Math.sign(targetPosition[0]) * -350, targetPosition[1] + 50]], this.bezierT, this.speed);
 		// Creates streaming bullets.
 		if ((t - streamingBulletTime) % streamingBulletInterval === 1) {
-			playSingleAudio("se_tan00", "yinyangstream" + frame, 0.3);
+			playSingleAudio("se_tan00", "yinyangstream" + frame, 0.25);
 			let angle = angleToPlayer(this.position);
 			if (Math.random() < streamingBulletDeflectionChance) {
 				angle += streamingBulletMaxDeflection * (Math.random() * 2 - 1);
@@ -72,7 +72,7 @@ function createAmberShard(targetPosition, factor78 = Math.random()) {
 			targetPosition = clampVector(targetPosition, initialTarget[0] - 60, initialTarget[0] + 60, initialTarget[1] - 40, initialTarget[1] + 40);
 		}
 		if ((t > 50) && (t < 375) && (t % diamondInterval === Math.min(diamondInterval - 1, 19))) {
-			playSingleAudio("se_tan00", "ambersharddiamonds" + frame, 0.3);
+			playSingleAudio("se_tan00", "ambersharddiamonds" + frame, 0.25);
 			let phase = angularFrequency * frame;
 			for (let diamondNum = 0; diamondNum < diamondsPerWave; diamondNum++) {
 				let angle = (diamondNum + phase) * Math.PI * 2 / diamondsPerWave;
@@ -99,7 +99,7 @@ function createAmberShard(targetPosition, factor78 = Math.random()) {
 		for (let bulletNum = 0; bulletNum <= bulletsPerAngle; bulletNum++) { // We process bullets outside angles to prevent scheduling more than 1 event per frame.
 			scheduleStageEvent((bulletNum === 0) ? 1 : (bulletNum * 3 + 14), function() {
 				if (bulletNum % 3 === 0) {
-					playSingleAudio("se_tan00", "ambershardfire" + frame, 0.3);
+					playSingleAudio("se_tan00", "ambershardfire" + frame, 0.25);
 				}
 				for (let angleNum = 0; angleNum < totalAngles; angleNum++) {
 					let primaryAngle = angleToPlayer(position); // Tracks the player during the burst.
@@ -177,7 +177,7 @@ function createAmberOrbDiamondWaves(centre, amount, firstSize = (difficulty === 
 		let waveSpeed = initialSpeed + 0.05 * waveNum;
 		let principalAngle = randomReal(0, Math.PI * 2);
 		scheduleStageEvent((waveNum === 0) ? 1 : (waveNum * ((difficulty === 3) ? 7 : 3) + 12), function() {
-			playAudio("se_tan00", 0.25);
+			playAudio("se_kira00", 0.5);
 			for (let bulletNum = 0; bulletNum < waveSize; bulletNum++) {
 				let angle = principalAngle + Math.PI * 2 * bulletNum / waveSize;
 				let v = polarToCartesian(waveSpeed, angle);
@@ -576,7 +576,7 @@ function createEye(position, deflectionMult) {
 	let dropIfAutokilled = [0, 3, 5, 6].includes(eyeSpawnCounter % 8) ? {point: 1} : {power: 1};
 	createEnemy(position, function(t) {
 		if (t === 50) {
-			playAudio("se_tan00", 0.2);
+			playSingleAudio("se_tan00", "eyeshot" + frame, 0.2);
 			let principalAngle = angleToPlayer(position);
 			let laserMinSpeed = [4.5, 5, 5.8, 8][difficulty];
 			let laserMaxSpeed = [6, 7, 8, 10][difficulty];
@@ -662,7 +662,9 @@ function createSpecialEye(distanceFromOrigin, angleFromOrigin) {
 				this.score = 0;
 				this.HP = 0;
 			}
-			playAudio("se_tan00", 0.2);
+			if (t % (shotInterval * 2) <= shotInterval) {
+				playAudio("se_tan00", 0.2);
+			}
 			let principalAngle = angleToPlayer(position);
 			let laserMinSpeed = [4, 5, 6.5, 7.5][difficulty];
 			let laserMaxSpeed = [4.5, 5.5, 7, 8][difficulty];
@@ -925,7 +927,7 @@ function createSuperMagmaElemental() {
 			}
 			let largeFireWaveInterval = [30, 25, 20, 16][difficulty];
 			if ((this.explosiveShotsLanded === totalPillars) && (t % largeFireWaveInterval === 0)) {
-				playAudio("se_tan00", 0.25);
+				playAudio("se_tan00", 0.225);
 				let waveSize = [12, 15, 18, 20][difficulty];
 				let waveMaxSpeed = [4.4, 5.3, 6.6, 8.3][difficulty];
 				for (let bulletNum = 0; bulletNum < waveSize; bulletNum++) {

@@ -469,7 +469,7 @@ export const Bosses = {
 			},
 			S2: {
 				name: "Ink Sign \"Plasma of the Galaxy of Origin\"",
-				HP: 1200,
+				HP: 1300,
 				guaranteedScore: 250000,
 				captureScore: 1500000,
 				dropList: {power: 30, point: 30, lifepiece: 1},
@@ -633,7 +633,7 @@ export const Bosses = {
 			},
 			S4: {
 				name: "Simplex \"Brain Field Lines\"",
-				HP: 1400,
+				HP: 1800,
 				guaranteedScore: 250000,
 				captureScore: 2000000,
 				dropList: {power: 30, point: 30, lifepiece: 1},
@@ -857,7 +857,7 @@ export const Bosses = {
 			},
 			S6: {
 				name: "Fission Orb \"Solar Wind of the Revolution\"",
-				HP: 1800,
+				HP: 2000,
 				guaranteedScore: 250000,
 				captureScore: 2500000,
 				dropList: {power: 30, point: 30, lifepiece: 1},
@@ -1128,7 +1128,7 @@ export const Bosses = {
 						// Processes Rin's shots.
 						let rinShotInterval = [100, 50, 48, 47][difficulty];
 						if (t % rinShotInterval === 0) {
-							playSingleAudio("se_tan00", "rinlexan" + frame, 0.4);
+							playSingleAudio("se_tan00", "rinlexan" + frame, 0.3);
 							let rinShotSize = [8, 6, 8, 12][difficulty];
 							let rinShotSpeed = [0.9, 1.1, 1.3, 1.6][difficulty];
 							let principalAngle = Math.PI * 2 * 0.618 * frame / (rinShotSize * rinShotInterval) + randomReal(-0.1, 0.1);
@@ -1152,7 +1152,7 @@ export const Bosses = {
 						// Processes Lexan's shots.
 						let lexanShotInterval = [100, 50, 48, 47][difficulty];
 						if (t % lexanShotInterval === 0) {
-							playSingleAudio("se_tan00", "rinlexan" + frame, 0.4);
+							playSingleAudio("se_tan00", "rinlexan" + frame, 0.3);
 							let lexanShotSize = [4, 3, 4, 6][difficulty];
 							let reversalDistance = [500, 600, 700, 800][difficulty]; // The initial distance from the player that a bullet needs to be to be deflected. This decreases by 0.5 per frame.
 							let maxClosestApproachDistance = [240, 225, 210, 200][difficulty];
@@ -1295,7 +1295,7 @@ export const Bosses = {
 									}
 								}, circularRenderFunction(4, hsltohex(hue, 100, 45), hsltohex(hue, 100, 50)), radialCollisionCheck(4));
 								if (this.position[1] < explosionHeight) {
-									playAudio("se_enep02");
+									playAudio("se_enep02", 0.75);
 									for (let ringNum = 0; ringNum < [3, 3, 4, 4][difficulty]; ringNum++) {
 										for (let bulletNum = 0; bulletNum < cinderRingSize; bulletNum++) {
 											let angle = cinderPhase + Math.PI * (bulletNum * 2 + ringNum) / cinderRingSize;
@@ -1511,7 +1511,7 @@ export const Bosses = {
 			},
 			S10: { // Final spell.
 				name: "\"Exotic Matter World of Universal Gravitation\"",
-				HP: 9000,
+				HP: 0.9000,
 				guaranteedScore: 1000000,
 				captureScore: 9000000,
 				dropList: {},
@@ -1703,7 +1703,7 @@ function lexanNonspell(startPosition, spawnerRingSize, spawnerRingSpeed, spawner
 	// One or more rings of arrow bullets are shot in a circle, and upon traveling a certain distance, these split into:
 	// (a) lasers of smaller arrow bullets travelling in the same direction but at a faster speed;
 	// (b) rings of small white circle bullets, which are oriented such that one bullet in every ring is aimed at the player.
-	playSingleAudio("se_tan00", "lexanNonspellSpawn" + frame, 0.5);
+	playSingleAudio("se_tan00", "lexanNonspellSpawn" + frame, 0.4);
 	for (let spawnerNum = 0; spawnerNum < spawnerRingSize; spawnerNum++) {
 		let angle = spawnerRingPhase + Math.PI * 2 * spawnerNum / spawnerRingSize;
 		createBullet(addVectors(startPosition, polarToCartesian(30, angle)), function(t) {
@@ -2031,42 +2031,49 @@ export const dialogueList = {
 		onAdvance: function() {
 			endCutscene();
 			currentDialogueId = undefined;
-//			skipPhases(0);
+//			skipPhases(9);
 		}
 	},
 	// Lexan's post-fight dialogue
 	44: {
 		speaker: "Luigin",
+		bossId: "lexan",
 		text: "See? This is the power of nuclear fusion!",
 		maxFrames: 300
 	},
 	45: {
 		speaker: "Lexan",
+		bossId: "lexan",
 		text: "Since when are you of all people so strong...",
 		maxFrames: 300
 	},
 	46: {
 		speaker: "Luigin",
+		bossId: "lexan",
 		text: "Now, will you stop trying to blow up the Capitol?",
 		maxFrames: 300
 	},
 	47: {
 		speaker: "Lexan",
+		bossId: "lexan",
 		text: "Why, obviously not!",
 		maxFrames: 300
 	},
 	48: {
 		speaker: "Lexan",
+		bossId: "lexan",
 		text: "Your fireworks will never compare to the beauty of nature that is this mountain.",
 		maxFrames: 300
 	},
 	49: {
 		speaker: "Luigin",
+		bossId: "lexan",
 		text: "*sigh*",
 		maxFrames: 300
 	},
 	50: {
 		speaker: "Luigin",
+		bossId: "lexan",
 		text: "Let me go look for Zenryaku...",
 		maxFrames: 300,
 		onAdvance: function() {
