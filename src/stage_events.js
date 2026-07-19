@@ -662,7 +662,7 @@ function createSpecialEye(distanceFromOrigin, angleFromOrigin) {
 				this.score = 0;
 				this.HP = 0;
 			}
-			if (t % (shotInterval * 2) <= shotInterval) {
+			if (t % (shotInterval / 15) <= (shotInterval / 30)) {
 				playAudio("se_tan00", 0.2);
 			}
 			let principalAngle = angleToPlayer(position);
@@ -1031,7 +1031,7 @@ export const stageEvents = { // The usual stage effects are such that no more th
 		Bosses.lexan.isDefeated = false;
 	},
 	10: function() {
-//		skipFrames(18280);
+		skipFrames(8980);
 	},
 	100: function() {
 		playBGM("bgm_stage", 368, 389.8);

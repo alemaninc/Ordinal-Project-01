@@ -895,6 +895,7 @@ export function skipFrames(amount) {
 		Bosses.zenryaku.frameDefeated = amount;
 	}
 	playBGM("bgm_stage", 368, 389.8, frame / 50 - 2);
+	document.getElementById("div_autocollectionLineIndicator").style.opacity = 0;
 }
 // Skips boss phases.
 export function skipPhases(amount) {
