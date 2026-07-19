@@ -87,6 +87,8 @@ export function endGame(overrideScreenChange) {
 	document.getElementById("window_game").style.display = "none"; // In case the game was paused.
 	document.getElementById("window_pauseMenu").style.display = "none";
 	document.getElementById("window_gameOver").style.display = "none";
+	document.getElementById("div_bossSpellCard").style.opacity = 0;
+	document.getElementById("div_bossSpellCard").innerText = "";
 	if (!overrideScreenChange) {
 		stopBGM();
 		openMenuWindow("virtueCalculation");
