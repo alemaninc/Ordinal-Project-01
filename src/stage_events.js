@@ -1029,7 +1029,7 @@ export const stageEvents = { // The usual stage effects are such that no more th
 		Bosses.lexan.isDefeated = false;
 	},
 	10: function() {
-		skipFrames(17800);
+//		skipFrames(0);
 	},
 	100: function() {
 		playBGM("bgm_stage", 368, 389.8);
