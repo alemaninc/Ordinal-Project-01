@@ -123,6 +123,15 @@ export const persistentData = {
 		spellCardsCaptured: [0, 0, 0, 0]
 	},
 	upgrades: Object.fromEntries(Object.keys(upgradeList).map(id => [id, 0])),
+	settings: {
+		volume: {
+			masterVolume: 0.6,
+			BGM: 1, // Background music
+			PL: 1, // Player sound effects
+			EN: 1, // Enemy sound effects
+			MENU: 1, // Menu sound effects
+		}
+	}
 }
 const initialPersistentData = structuredClone(persistentData);
 export const upgradeEffectValues = Object.fromEntries(Object.keys(upgradeList).map(id => [id, 0]));

@@ -41,9 +41,13 @@
 				<br>
 				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_records" style="left: 60px; width: 400px;">Records</div>
 				<br>
-				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_credits" style="left: 80px; width: 400px;">Credits</div>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_settings" style="left: 80px; width: 400px;">Settings</div>
 				<br>
-				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_wipeSave" style="left: 100px; width: 400px;">Wipe Save</div>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_credits" style="left: 100px; width: 400px;">Credits</div>
+				<br>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_changelog" style="left: 120px; width: 400px;">Changelog</div>
+				<br>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_wipeSave" style="left: 140px; width: 400px;">Wipe Save</div>
 			</div>
 			<div id="window_chooseDifficulty" style="display: none; text-align: center;">
 				<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Choose a Difficulty:</span>
@@ -156,9 +160,11 @@
 				<br>
 				<div class="userOption active" data-menuWindow="pauseMenu" id="button_pauseMenu_continueGame" style="left: 30px; width: 400px; text-align: left;">Continue the Game</div>
 				<br>
-				<div class="userOption" data-menuWindow="pauseMenu" id="button_pauseMenu_returnToMainMenu" style="left: 50px; width: 400px; text-align: left;">Return to Main Menu</div>
+				<div class="userOption" data-menuWindow="pauseMenu" id="button_pauseMenu_settings" style="left: 50px; width: 400px; text-align: left;">Settings</div>
 				<br>
-				<div class="userOption" data-menuWindow="pauseMenu" id="button_pauseMenu_startOver" style="left: 70px; width: 400px; text-align: left;">Start Over</div>
+				<div class="userOption" data-menuWindow="pauseMenu" id="button_pauseMenu_returnToMainMenu" style="left: 70px; width: 400px; text-align: left;">Return to Main Menu</div>
+				<br>
+				<div class="userOption" data-menuWindow="pauseMenu" id="button_pauseMenu_startOver" style="left: 90px; width: 400px; text-align: left;">Start Over</div>
 			</div>
 			<div id="window_gameOver" style="position: absolute; display: none; text-align: center; height: 630px; width: 780px; background-color: #000000cc;">
 				<span style="color: #ccccff; font-weight: 700; font-size: 30px; padding-top: 10px;">Game Over!</span>
@@ -265,7 +271,7 @@
 						<td colspan="3" id="span_upgrades_selectedUpgradeCost" style="text-align: center; color: #cccc00; height: 30px;"></td>
 					</tr>
 				</table>
-				<div style="position: absolute; bottom: 30px; left: 40px; width: 700px; text-align: center; font-style: italic;">Note: these upgrades are purely optional and not required to progress through the game.<br><br>The game is balanced around without using any upgrades.</div>
+				<div style="position: absolute; bottom: 30px; left: 40px; width: 700px; text-align: center; font-style: italic;">Note: these upgrades are purely optional and not required to progress through the game.<br><br>The game is balanced not without using any upgrades.</div>
 			</div>
 			<div id="window_records" style="display: none; text-align: center; color: #ccccff; height: 630px; width: 780px;">
 				<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Records</span>
@@ -303,6 +309,26 @@
 					</tr>
 				</table>
 			</div>
+			<div id="window_settings" style="display: none; text-align: center; color: #ccccff; height: 630px; width: 780px; cursor: auto; background-color: #000000;">
+				<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Settings</span>
+				<br>
+				<table class="settingsTable">
+					<tr>
+						<th colspan="2">Audio Volume</th>
+					</tr>
+					<tr>
+						<td colspan="2">Master Volume: <span id="span_settings_volume_masterVolume"></span>%<br><input id="input_settings_volume_masterVolume" type="range" min="0" max="1" step="0.01" style="width: 650px;"></td>
+					</tr>
+					<tr>
+						<td>Background Music: <span id="span_settings_volume_BGM"></span>%<br><input id="input_settings_volume_BGM" type="range" min="0" max="1" step="0.01" style="width: 300px;"></td>
+						<td>Menus: <span id="span_settings_volume_MENU"></span>%<br><input id="input_settings_volume_MENU" type="range" min="0" max="1" step="0.01" style="width: 300px;"></td>
+					</tr>
+					<tr>
+						<td>Player Sound Effects: <span id="span_settings_volume_PL"></span>%<br><input id="input_settings_volume_PL" type="range" min="0" max="1" step="0.01" style="width: 300px;"></td>
+						<td>Enemy Sound Effects: <span id="span_settings_volume_EN"></span>%<br><input id="input_settings_volume_EN" type="range" min="0" max="1" step="0.01" style="width: 300px;"></td>
+					</tr>
+				</table>
+			</div>
 			<div id="window_credits" style="display: none; text-align: center; color: #ccccff; height: 630px; width: 780px; cursor: auto;">
 				<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Credits</span>
 				<br>
@@ -322,6 +348,26 @@
 					<tr><td>Ending Theme</td><td><a href="https://www.youtube.com/watch?v=GN-AwkrnYS0" target="_blank">Tokiko Tatsunagi - A Preface to the Future</a></td></tr>
 					<tr><td colspan="2">All sound effects are sourced from official Touhou games, primarily <i>Touhou&nbsp;Kishinjou&nbsp;~&nbsp;Double&nbsp;Dealing&nbsp;Character</i>.</td></tr>
 				</table>
+			</div>
+			<div id="window_changelog" style="display: none; text-align: left; color: #ccccff; height: 630px; width: 780px;">
+				<div style="text-align: center;">
+					<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Changelog</span>
+				</div>
+				<div class="changelogDiv">
+					<h3>Version OP01.0 (2026-07-19)</h3>
+					<ul>
+						<li>Initial release - stage, bosses, upgrades, records, credits.</li>
+					</ul>
+					<h3>Version OP01.1 (2026-07-19)</h3>
+					<ul>
+						<li>Bullets during Lexan's second spell card now have better contrast.</li>
+						<li>There is now a 1.5s idle period at the start of Lexan's fourth spell. To compensate, this spell card now has 1900 HP instead of 1800, and its timer is now 48 seconds instead of 45.</li>
+						<li>It is now possible to start shooting and bombing while holding Shift.</li>
+						<li>Luigin's sprite now turns blue while invulnerable to attacks due to recently missing or bombing.</li>
+						<li>Added a changelog.</li>
+						<li>Added a Settings tab featuring volume sliders.</li>
+					</ul>
+				</div>
 			</div>
 		</div>
 	</body>

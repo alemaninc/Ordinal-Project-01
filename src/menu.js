@@ -1,8 +1,8 @@
 import { activeBGMProperties, pauseBGM, playAudio, playBGM, unpauseBGM } from "./audio.js";
 import { advanceDialogue, currentDialogueId, dialogueList, startDialogue } from "./boss_data.js";
-import { continuesLeft, difficulty, endGame, frame, gameIsPaused, gameOverScreenActive, isInCutscene, lastBomb, startGame, togglePause, useBomb, useContinue } from "./game.js";
+import { continuesLeft, difficulty, endGame, frame, gameClockId, gameIsPaused, gameOverScreenActive, isInCutscene, lastBomb, startGame, togglePause, useBomb, useContinue } from "./game.js";
 import { initializationComplete } from "./initialize.js";
-import { loadPersistentData, savePersistentData, updateRecordInteface, updateUpgradeInterface, wipeSave } from "./persistent_data.js";
+import { loadPersistentData, persistentData, savePersistentData, updateRecordInteface, updateUpgradeInterface, wipeSave } from "./persistent_data.js";
 import { modulo } from "./utility.js";
 
 // The currently active window.
@@ -32,13 +32,21 @@ export const ZPresses = {
 			openMenuWindow("records");
 			updateRecordInteface();
 		},
-		// Credits
+		// Settings
 		3: function() {
+			openMenuWindow("settings");
+		},
+		// Credits
+		4: function() {
 			openMenuWindow("credits");
 			advanceCredits(-currentCreditsTable); // Rewinds to table 0.
 		},
+		// Changelog
+		5: function() {
+			openMenuWindow("changelog");
+		},
 		// Wipe Save
-		4: function() {
+		6: function() {
 			wipeSaveClicksLeft--;
 			if (wipeSaveClicksLeft === 0) {
 				wipeSave();
@@ -72,12 +80,17 @@ export const ZPresses = {
 		0: function() {
 			togglePause();
 		},
-		// Return to Main Menu
+		// Settings
 		1: function() {
+			document.getElementById("window_game").style.display = "none"; // Makes the game visible in the background.
+			openMenuWindow("settings");
+		},
+		// Return to Main Menu
+		2: function() {
 			endGame(false);
 		},
 		// Start Over
-		2: function() {
+		3: function() {
 			endGame(true);
 			startGame(difficulty);
 		}
@@ -129,11 +142,22 @@ const EscPresses = {
 	records: function() {
 		openMenuWindow("mainMenu");
 	},
+	settings: function() {
+		if (gameClockId === undefined) {
+			openMenuWindow("mainMenu");
+		} else {
+			openMenuWindow("pauseMenu");
+			document.getElementById("window_game").style.display = "block"; // Makes the game visible in the background.
+		}
+	},
 	credits: function() {
 		openMenuWindow("mainMenu");
 		if (activeBGMProperties.id !== "bgm_title") { // The credits theme plays instead of the title theme if this was opened after clearing the stage. Return to the stage theme on exit.
 			playBGM("bgm_title", 3, 60);
 		}
+	},
+	changelog: function() {
+		openMenuWindow("mainMenu");
 	},
 	badEnding: function() {
 		openMenuWindow("mainMenu");
@@ -153,7 +177,7 @@ function switchMenuButton(displacement) {
 	buttons[currentPosition].classList.remove("active");
 	buttons[newPosition].classList.add("active");
 	if (currentPosition !== newPosition) { // i.e. if there is not only one button in this menu
-		playAudio("se_select00");
+		playAudio("se_select00", "MENU");
 	}
 }
 // Switches the 13 buttons in Upgrades, accounting for their columnar layout.
@@ -172,7 +196,7 @@ function switchUpgradeMenuButton(displacement) {
 	buttons[currentPosition].classList.remove("active");
 	buttons[newPosition].classList.add("active");
 	updateUpgradeInterface();
-	playAudio("se_select00");
+	playAudio("se_select00", "MENU");
 }
 // Displays a credits table.
 var currentCreditsTable = 0;
@@ -180,22 +204,22 @@ function advanceCredits(displacement) {
 	document.getElementById("div_creditsTable" + currentCreditsTable).style.display = "none";
 	currentCreditsTable = modulo(currentCreditsTable + displacement, 2);
 	document.getElementById("div_creditsTable" + currentCreditsTable).style.display = "inline-block";
-	playAudio("se_select00");
+	playAudio("se_select00", "MENU");
 	document.getElementById("div_creditsTableNumber").innerText = (currentCreditsTable + 1) + " / 2 | Use arrow keys to advance";
 }
 // Contains which keys (arrow keys + shift for focus + z for shoot) are currently being held.
 export const activeKeys = {
-	ArrowUp: false,
-	ArrowDown: false,
-	ArrowLeft: false,
-	ArrowRight: false,
-	Shift: false,
+	arrowup: false,
+	arrowdown: false,
+	arrowleft: false,
+	arrowright: false,
+	shift: false,
 	z: false
 }
 // Updates `activeKeys` when a key is pressed, and processes menu button clicks.
 export function keyDown(event) {
-	if (activeKeys[event.key] !== undefined) {
-		activeKeys[event.key] = true;
+	if (activeKeys[event.key.toLowerCase()] !== undefined) {
+		activeKeys[event.key.toLowerCase()] = true;
 	}
 	if (activeWindow === "game") { // If the game is currently active, we ignore all key presses except those governed by `activeKeys`, and pausing.
 		if (gameOverScreenActive) {
@@ -207,28 +231,28 @@ export function keyDown(event) {
 		if (gameIsPaused) {
 			return;
 		}
-		if ((event.key === "x") && (frame - lastBomb > 350) && (!gameIsPaused) && (!isInCutscene)) { // Bomb duration is 6s.
+		if ((event.key.toLowerCase() === "x") && (frame - lastBomb > 350) && (!gameIsPaused) && (!isInCutscene)) { // Bomb duration is 6s.
 			useBomb();
 		}
-		if ((event.key === "z") && (currentDialogueId !== undefined)) {
+		if ((event.key.toLowerCase() === "z") && (currentDialogueId !== undefined)) {
 			advanceDialogue();
 		}
 	} else {
-		if (event.key === "z") {
+		if (event.key.toLowerCase() === "z") {
 			let buttons = Array.from(document.querySelectorAll("[data-menuWindow='" + activeWindow + "']"));
 			let currentPosition = buttons.map(x => x.classList.contains("active")).indexOf(true);
 			if (ZPresses[activeWindow][currentPosition] !== undefined) {
 				ZPresses[activeWindow][currentPosition]();
-				playAudio("se_ok00");
+				playAudio("se_ok00", "MENU");
 			} else {
-				playAudio("se_invalid");
+				playAudio("se_invalid", "MENU");
 			}
 		} else if (event.key === "Escape") {
 			if (EscPresses[activeWindow] !== undefined) {
 				EscPresses[activeWindow]();
-				playAudio("se_cancel00");
+				playAudio("se_cancel00", "MENU");
 			} else {
-				playAudio("se_invalid");
+				playAudio("se_invalid", "MENU");
 			}
 		} else { // Switching works differently in Upgrades due to the columnar layout.
 			if (activeWindow === "upgrades") {
@@ -259,8 +283,8 @@ export function keyDown(event) {
 }
 // Updates `activeKeys` when a key is released.
 export function keyUp(event) {
-	if (activeKeys[event.key] !== undefined) {
-		activeKeys[event.key] = false;
+	if (activeKeys[event.key.toLowerCase()] !== undefined) {
+		activeKeys[event.key.toLowerCase()] = false;
 	}
 }
 // Changes the active window.

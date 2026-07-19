@@ -1,12 +1,12 @@
 import { Bosses, currentDialogueId, dialogueList, dialoguePortraitVisibilities } from "./boss_data.js";
-import { bullets, enemies, fps, canvasContext, graze, lives, playerBullets, playerHitboxRadius, playerPosition, pointValue, power, score, items, frame, bombs, lastBomb, playerBombAngles, playerBombRange, maxBombDeflection, playerBombGuaranteedRange, angleToPlayer, currentBoss, isInCutscene, canGetSpellCard, spellCardBonus, scoreForNextBonus, collectedScoreBonuses } from "./game.js";
+import { bullets, enemies, fps, canvasContext, graze, lives, playerBullets, playerHitboxRadius, playerPosition, pointValue, power, score, items, frame, bombs, lastBomb, playerBombAngles, playerBombRange, maxBombDeflection, playerBombGuaranteedRange, angleToPlayer, currentBoss, isInCutscene, canGetSpellCard, spellCardBonus, scoreForNextBonus, collectedScoreBonuses, lastMiss } from "./game.js";
 import { activeKeys } from "./menu.js";
 import { virtueProgressMultiplier } from "./persistent_data.js";
 import { addVectors, clampNumber, formatInteger, layeredLinearGradient, multiplyVectors, numberIsBounded, polarToCartesian, predictableRandom, rotateVector } from "./utility.js";
 
 const images = {};
 // Lists all the image files which must be loaded by their file name (excluding the file ending if it is "png").
-export const requiredImages = ["enemy_amberorb", "enemy_ambershard1", "enemy_ambershard2", "enemy_eye", "enemy_magmaelemental", "enemy_memoryshard1", "enemy_memoryshard2", "enemy_ufo_i1", "enemy_ufo_i2", "enemy_ufo_l1", "enemy_ufo_l2", "enemy_ufo_o1", "enemy_ufo_o2", "enemy_ufo_t1", "enemy_ufo_t2", "enemy_ufo_z1", "enemy_ufo_z2", "enemy_witch", "item_bombpiece", "item_extend", "item_fullpower", "item_lifepiece", "item_point", "item_power", "item_spellcard", "lexan", "lexan2", "luigin_front", "luigin", "stagebg1", "stagebg2.jpg", "stagebg3.jpg", "zenryaku"];
+export const requiredImages = ["enemy_amberorb", "enemy_ambershard1", "enemy_ambershard2", "enemy_eye", "enemy_magmaelemental", "enemy_memoryshard1", "enemy_memoryshard2", "enemy_ufo_i1", "enemy_ufo_i2", "enemy_ufo_l1", "enemy_ufo_l2", "enemy_ufo_o1", "enemy_ufo_o2", "enemy_ufo_t1", "enemy_ufo_t2", "enemy_ufo_z1", "enemy_ufo_z2", "enemy_witch", "item_bombpiece", "item_extend", "item_fullpower", "item_lifepiece", "item_point", "item_power", "item_spellcard", "lexan", "lexan2", "luigin_front", "luigin_front_invincible", "luigin", "stagebg1", "stagebg2.jpg", "stagebg3.jpg", "zenryaku"];
 // We store this to be able to calculate how many files have been loaded for the loading screen.
 export var imageFilesLoaded = 0;
 // Retrieves an image and increments `imageFilesLoaded` once it is available.
@@ -282,8 +282,8 @@ export function drawCanvas() {
 		document.getElementById("canvasBackground").style.transform = ((currentBoss.bossId === "zenryaku") && currentBoss.isInSpellCard && (currentBoss.currentAttackTime > 25)) ? ("rotate(" + ((frame / 2) % 360) + "deg)") : "";
 	}
 	// 2. Draw the player
-	drawImage("luigin_front", playerPosition[0], playerPosition[1] + 10, (activeKeys.ArrowRight ? 0.15 : 0) - (activeKeys.ArrowLeft ? 0.15 : 0));
-	if (activeKeys.Shift) { // show hitbox if focused
+	drawImage("luigin_front" + (((frame - lastMiss) > 100) && (frame - lastBomb > 350) ? "" : "_invincible"), playerPosition[0], playerPosition[1] + 10, (activeKeys.arrowright ? 0.15 : 0) - (activeKeys.arrowleft ? 0.15 : 0));
+	if (activeKeys.shift) { // show hitbox if focused
 		let playerHitboxRenderFunction = circularRenderFunction(playerHitboxRadius, "#990000");
 		playerHitboxRenderFunction(playerPosition);
 	}

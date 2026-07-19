@@ -33,7 +33,7 @@ export const Bosses = {
 					// Creates lasers that reflect off the sides of the screen.
 					let shotInterval = [17, 11, 12, 14][difficulty];
 					if ((t - 40) % shotInterval === 1) {
-						playAudio("se_kira00", 0.3);
+						playAudio("se_kira00", "EN", 0.3);
 						let angularSpeed = [0.17, 0.125, 0.11, 0.1][difficulty];
 						let bulletsPerAngle = [11, 11, 10, 9][difficulty];
 						let numberOfAngles = [2, 2, 3, 5][difficulty];
@@ -88,7 +88,7 @@ export const Bosses = {
 					let totalColours = [4, 4, 5, 6][difficulty];
 					let shotInterval = [96, 80, 70, 64][difficulty];
 					if ((t - 100) % shotInterval === 1) { // Creates the bullet waves.
-						playAudio("se_tan00", 0.4);
+						playAudio("se_tan00", "EN", 0.4);
 						let waveSize = [52, 56, 65, 72][difficulty];
 						let waveSpeed = [1.7, 2, 2.2, 2.3][difficulty];
 						let principalAngle = Math.PI * 2 * Math.random();
@@ -103,12 +103,12 @@ export const Bosses = {
 						}
 					}
 					if ((t - 100) % 50 === 1) { // Plays chimes to indicate the timing of the next change.
-						playAudio("se_lgods1");
+						playAudio("se_lgods1", "EN");
 					} else if ((t - 100) % 25 === 1) {
-						playAudio("se_lgods2");
+						playAudio("se_lgods2", "EN");
 					}
 					if ((t - 100) % 100 === 1) { // Changes bullets.
-						playAudio("se_kira00", 0.75);
+						playAudio("se_kira00", "EN", 0.75);
 						let newColour = (this.currentSmallColour += ranint(1, totalColours - 1)) % totalColours;
 						this.currentSmallColour = newColour;
 						let bulletIds = Object.keys(bullets);
@@ -167,7 +167,7 @@ export const Bosses = {
 					][difficulty]
 					let shotInterval = [60, 55, 52, 50][difficulty]
 					if (shotTimes.includes((t - 90) % shotInterval)) {
-						playAudio("se_kira00", 0.2);
+						playAudio("se_kira00", "EN", 0.2);
 						let letter = this.letters[ranint(0, this.letters.length - 1)];
 						let letterPosition = [randomReal(-242, 242), randomReal(-292, -208)];
 						let fallTime = ranint(30, 50);
@@ -209,7 +209,7 @@ export const Bosses = {
 					// Creates alternating horizontal and vertical water waves, and falling raindrops in the same orientations.
 					let waveInterval = [135, 115, 102, 96][difficulty];
 					if ((t - 60) % waveInterval === 1) {
-						playAudio("se_kira00", 1);
+						playAudio("se_kira00", "EN", 1);
 						let waveOrientation = ((t - 60) % (waveInterval * 2) < waveInterval) ? 0 : 1; // 0 = horizontal, 1 = vertical
 						let wavePhase = Math.PI * 2 * Math.random();
 						let wavePeriod = [140, 125, 115, 110][difficulty];
@@ -346,10 +346,10 @@ export const Bosses = {
 						currentBoss.targetPosition = clampVector(currentBoss.targetPosition, -150, 150, -250, -200);
 					}
 					if ((t > 55) && (Object.keys(bullets).length <= [20, 40, 80, 120][difficulty]) && (!this.towerFormationInProgress)) {
-						playAudio("se_ch02");
+						playAudio("se_ch02", "EN");
 						this.nextFloor = t + 30;
 						scheduleStageEvent(35, function() {
-							playAudio("se_kira00");
+							playAudio("se_kira00", "EN");
 							Bosses.lexan.attacks.S1.initialBulletLocations = [];
 							Bosses.lexan.attacks.S1.towerBulletsSpawned = 0;
 							let horizontalCentre = clampNumber(horizontalWidth / 2 - 240, playerPosition[0], 240 - horizontalWidth / 2);
@@ -374,7 +374,7 @@ export const Bosses = {
 						let angle = bearingToAngle(randomReal(105, 255));
 						let v = polarToCartesian(speed, angle);
 						if (frame % 6 === 0) {
-							playSingleAudio("se_kira00", "ministry" + frame, 0.2);
+							playSingleAudio("se_kira00", "EN", "ministry" + frame, 0.2);
 						}
 						createBullet(this.initialBulletLocations[this.towerBulletsSpawned], function(t) {
 							if (!this.indestructible) { // Bullets are indestructible before the tower collapses.
@@ -396,7 +396,7 @@ export const Bosses = {
 						this.nextFloor += bulletInterval * Math.exp(0.0015 * Math.min(heightReached - 300, heightReached * 2)); // Once the tower reaches above the screen, artificially make it rise faster to reduce idle time.
 						this.towerBulletsSpawned++;
 						if (this.towerBulletsSpawned === this.initialBulletLocations.length) { // Not the same as the previous check as `towerBulletsSpawned` has incremented.
-							playAudio("se_don00");
+							playAudio("se_don00", "EN");
 							for (let bulletId of Object.keys(bullets)) {
 								bullets[bulletId].indestructible = false;
 							}
@@ -484,7 +484,7 @@ export const Bosses = {
 						let angle = angleToPlayer(this.position);
 						this.velocity = addVectors(multiplyVectors(this.velocity, 0.98), polarToCartesian(maxSpeed * clampNumber(0, t / 200 - 0.25, 1) * 0.02, angle));
 						this.position = addVectors(this.position, this.velocity);
-					}, circularRenderFunction(6, "#333377", "#111155"), radialCollisionCheck(6), 1000, 1000, {velocity: [(targetPosition[0] - currentPosition[0]) / 50, (targetPosition[1] - currentPosition[1]) / 50]});
+					}, circularRenderFunction(6, "#444499", "#222266"), radialCollisionCheck(6), 1000, 1000, {velocity: [(targetPosition[0] - currentPosition[0]) / 50, (targetPosition[1] - currentPosition[1]) / 50]});
 				},
 				behaviourFunction: function(t) {
 					// Creates plasma bullets which fly out to target positions, then start homing into the player at fixed speeds.
@@ -499,7 +499,7 @@ export const Bosses = {
 					}
 					let shotInterval = [100, 90, 80, 70][difficulty];
 					if ((t - 80) % shotInterval === 0) {
-						playAudio("se_boon00");
+						playAudio("se_boon00", "EN");
 						let primaryAngle = angleToPlayer(enemies[currentBoss.enemyId].position);
 						let ringSize = [3, 4, 5, 6][difficulty];
 						if ((t - 80) % (shotInterval * 2) >= shotInterval) {
@@ -516,7 +516,7 @@ export const Bosses = {
 							this.createPlasmaBullet(addVectors(enemies[currentBoss.enemyId].position, polarToCartesian(15, angle)), addVectors(enemies[currentBoss.enemyId].position, polarToCartesian(ringRadius, angle)));
 						}
 					} else if ((t - 80) % shotInterval === shotInterval / 2) { // Shoot the aimed shot.
-						playAudio("se_boon00");
+						playAudio("se_boon00", "EN");
 						let angle = angleToPlayer(enemies[currentBoss.enemyId].position);
 						let distanceToPlayer = Math.sqrt(squaredDistance(enemies[currentBoss.enemyId].position, playerPosition));
 						let aimedShotDistance = [1, 1.2, 1.4, 1.6][difficulty];
@@ -574,7 +574,7 @@ export const Bosses = {
 					let cornerShotSize = [6, 8, 6, 8][difficulty];
 					let cornerShotSpeed = [1.6, 2, 2.4, 2.8][difficulty];
 					if (numberIsBounded(0, (t - 80) % 600, 225) && (t % cornerShotInterval === 0)) {
-						playAudio("se_tan00");
+						playAudio("se_tan00", "EN", 0.4);
 						// Shoot from two opposite corners at a time on Easy and Normal, and all four on Hard and Lunatic.
 						for (let cornerNum = (difficulty < 2) ? Math.floor((t / cornerShotInterval) % 2) : 0; cornerNum < 4; cornerNum += (difficulty < 2) ? 2 : 1) {
 							let phase = Math.random();
@@ -591,7 +591,7 @@ export const Bosses = {
 					let centreShotSize = [16, 20, 24, 30][difficulty];
 					let centreShotMinSpeed = [1.6, 2, 2.4, 2.8][difficulty];
 					if (numberIsBounded(300, (t - 80) % 600, 525) && (t % centreShotInterval === 0)) {
-						playAudio("se_tan00");
+						playAudio("se_tan00", "EN", 0.4);
 						// Likewise, shoot two non-adjacent speeds at a time on Easy and Normal, and all four on Lunatic.
 						for (let speedNum = (difficulty < 2) ? Math.floor((t / centreShotInterval) % 2) : 0; speedNum < 4; speedNum += (difficulty < 2) ? 2 : 1) {
 							let principalAngle = Math.PI * 2 * Math.random();
@@ -633,19 +633,19 @@ export const Bosses = {
 			},
 			S4: {
 				name: "Simplex \"Brain Field Lines\"",
-				HP: 1800,
+				HP: 1900,
 				guaranteedScore: 250000,
 				captureScore: 2000000,
 				dropList: {power: 30, point: 30, lifepiece: 1},
-				maxFrames: 2250,
+				maxFrames: 2400,
 				chargeSeparation: 550,
 				chargeAngle: 0,
 				chargeAngularSpeed: 0,
 				behaviourFunction: function(t) {
 					// Two very large indestructible point charges (sources) are created, a positive and negative. Small positive charges are then spawned at the positive source, which travel to the negative source according to electric field laws.
 					// We apply forces to the bullets' positions here rather than their velocities as otherwise the desired field line pattern does not form.
-					if (t === 1) {
-						playAudio("se_ch00");
+					if (t === 75) {
+						playAudio("se_ch00", "EN");
 						currentBoss.targetPosition = clampVector(currentBoss.targetPosition, -150, 150, -250, -200);
 						let fieldStrength = [140000, 160000, 180000, 200000][difficulty];
 						let chargeSpawnsPerFrame = [0.5, 1, 1.5, 2][difficulty];
@@ -656,7 +656,7 @@ export const Bosses = {
 							// Creates charges.
 							let chargesToSpawn = Math.floor(chargeSpawnsPerFrame * clampNumber(0, t / 80 - 1, 1) + Math.random());
 							if (t % 5 === 0) {
-								playAudio("se_kira00", 0.15);
+								playAudio("se_kira00", "EN", 0.15);
 							}
 							for (let chargeNum = 0; chargeNum < chargesToSpawn; chargeNum++) {
 								createBullet(addVectors(this.position, randomPolarVector(125, 150)), function() {
@@ -686,21 +686,22 @@ export const Bosses = {
 								}
 							}
 						}, circularRenderFunction(200, "#00ffff", "#00ffff", 5), radialCollisionCheck(200), 1000, 1000, {indestructible: true});
-					} else if (t % 100 === 1) {
+					} else if ((t - 75) % 100 === 1) {
 						currentBoss.targetPosition = addVectors(currentBoss.targetPosition, randomPolarVector(30, 50));
 						currentBoss.targetPosition = clampVector(currentBoss.targetPosition, -150, 150, -250, -200);
 					}
 					// Moves the charges.
-					this.chargeSeparation = (t < 200) ? (500 - t / 2) : (400 - 50 * Math.sin(t / 100 - 2));
-					this.chargeAngle += this.chargeAngularSpeed;
-					// Charge angle obeys simple harmonic motion with some random damping.
-					let maxAngularAcceleration = [0.00025, 0.00032, 0.0004, 0.0005][difficulty];
-					this.chargeAngularSpeed = this.chargeAngularSpeed * 0.999 + maxAngularAcceleration * randomReal(-1, 1) - this.chargeAngle * 0.0001;
-					// On Normal and above, Lexan shoots additional rings of bullets.
+					if (t > 75) {
+						this.chargeSeparation = (t < 300) ? (550 - t / 2) : (400 - 50 * Math.sin(t / 100 - 3));
+						this.chargeAngle += this.chargeAngularSpeed;
+						// Charge angle obeys simple harmonic motion with some random damping.
+						let maxAngularAcceleration = [0.00025, 0.00032, 0.0004, 0.0005][difficulty];
+						this.chargeAngularSpeed = this.chargeAngularSpeed * 0.999 + maxAngularAcceleration * randomReal(-1, 1) - this.chargeAngle * 0.0001;
+					}
 					if (difficulty !== 0) {
 						let shotInterval = [200, 100, 50][difficulty - 1];
 						if ((t - 270) % shotInterval === 1) {
-							playAudio("se_tan00", 0.8);
+							playAudio("se_tan00", "EN", 0.7);
 	 						let shotSize = [10, 12, 16][difficulty - 1];
 							let shotSpeed = [3.6, 4.8, 6.4][difficulty - 1];
 							let principalAngle = Math.PI * 2 * Math.random();
@@ -756,12 +757,12 @@ export const Bosses = {
 					// Creates waves of straight lasers surrounded by sinusoidal lasers.
 					// After several such waves, creates two pairs of radial lasers (see "Moon Dragon").
 					if (t === 76) {
-						playAudio("se_ch02");
+						playAudio("se_ch02", "EN");
 					}
 					if ((t - 110) % 501 < 310) {
 						let shotInterval = [96, 88, 82, 78][difficulty];
 						if ((t - 110) % shotInterval === 1) { // Processes the linear lasers.
-							playAudio("se_lazer00");
+							playAudio("se_lazer00", "EN");
 							let timelineSpacing = [100, 90, 84, 78][difficulty];
 							let timelineMinAmplitude = [48, 45, 42, 39][difficulty];
 							let timelineMaxAmplitude = [48, 60, 70, 78][difficulty];
@@ -788,9 +789,9 @@ export const Bosses = {
 							}
 						}
 					} else if ((t - 110) % 501 === 405) {
-						playAudio("se_ch02");
+						playAudio("se_ch02", "EN");
 					} else if ([440, 459 - difficulty * 4].includes((t - 110) % 501)) { // Processes the radial lasers
-						playAudio("se_lazer00");
+						playAudio("se_lazer00", "EN");
 						let initialPosition = structuredClone(enemies[currentBoss.enemyId].position);
 						let circleSize = [16, 18, 20, 22][difficulty];
 						let timelineSpeed = [3.2, 4, 5, 6.3][difficulty];
@@ -870,7 +871,7 @@ export const Bosses = {
 					// After 9 seconds (twice the interval between star bullet spawns), star bullets stop shooting, and instead fly at the player.
 					// Upon reaching the edge of the screen, these star bullets then explode, sending out circular waves of bullets.
 					if (t % 225 === 80) {
-						playAudio("se_boon01");
+						playAudio("se_boon01", "EN");
 						let orientation = (frame % 2 === 0) ? 1 : -1;
 						let hue = randomReal(0, 60);
 						let velocity = [randomReal(1.3, 1.4) * orientation, randomReal(-0.7, -0.65)];
@@ -888,18 +889,20 @@ export const Bosses = {
 								let positionDecayRate = Math.min(t / 20000, 0.01);
 								this.position = addVectors(multiplyVectors(this.position, 1 - positionDecayRate), multiplyVectors(targetPosition, positionDecayRate));
 								velocity = addVectors(velocity, [-0.00375 * orientation, 0.0025]);
-								if ((t % 2 === 0) && (t % (windShootPeriod + windIdlePeriod) < windShootPeriod)) { // Creates the solar wind.
-									if (t % 6 === 0) {
-										playSingleAudio("se_tan00", "solarwind" + frame, 0.15);
+								if (t % (windShootPeriod + windIdlePeriod) < windShootPeriod) { // Creates the solar wind.
+									if (frame % 6 === 0) {
+										playSingleAudio("se_tan00", "EN", "solarwind" + frame, 0.15);
 									}
-									let principalAngle = initialWindAngle + windRotationSpeed * orientation * t;
-									for (let windNum = 0; windNum < windRingSize; windNum++) {
-										let angle = principalAngle + Math.PI * 2 * windNum / windRingSize;
-										let motionAngle = angle - Math.PI * orientation / 2;
-										createBullet(addVectors(this.position, polarToCartesian(30, angle)), function(t) {
-											let speed = windMaxSpeed * (1 - Math.exp(t * -0.015));
-											this.position = addVectors(this.position, polarToCartesian(speed, motionAngle));
-										}, circularRenderFunction(4, hsltohex(hue, 100, 50) + "80", hsltohex(hue, 100, 50)), radialCollisionCheck(4));
+									if (t % 2 === 0) {
+										let principalAngle = initialWindAngle + windRotationSpeed * orientation * t;
+										for (let windNum = 0; windNum < windRingSize; windNum++) {
+											let angle = principalAngle + Math.PI * 2 * windNum / windRingSize;
+											let motionAngle = angle - Math.PI * orientation / 2;
+											createBullet(addVectors(this.position, polarToCartesian(30, angle)), function(t) {
+												let speed = windMaxSpeed * (1 - Math.exp(t * -0.015));
+												this.position = addVectors(this.position, polarToCartesian(speed, motionAngle));
+											}, circularRenderFunction(4, hsltohex(hue, 100, 50) + "80", hsltohex(hue, 100, 50)), radialCollisionCheck(4));
+										}
 									}
 								}
 							} else if (t === starLifespan) {
@@ -908,7 +911,7 @@ export const Bosses = {
 								let speed = [4, 5, 6, 7][difficulty] * (1 - Math.exp((t - starLifespan) * -0.005));
 								this.position = addVectors(this.position, polarToCartesian(speed, this.angle));
 								if ((Math.abs(this.position[0]) > 250) || (Math.abs(this.position[1]) > 300)) {
-									playAudio("se_kira00");
+									playAudio("se_kira00", "EN");
 									let totalWaves = [1, 1, 2, 3][difficulty];
 									let waveSize = [6, 16, 16, 18][difficulty];
 									let principalAngle = Math.PI * 2 * Math.random(); // Waves after the first one are static.
@@ -1128,7 +1131,7 @@ export const Bosses = {
 						// Processes Rin's shots.
 						let rinShotInterval = [100, 50, 48, 47][difficulty];
 						if (t % rinShotInterval === 0) {
-							playSingleAudio("se_tan00", "rinlexan" + frame, 0.3);
+							playSingleAudio("se_tan00", "EN", "rinlexan" + frame, 0.3);
 							let rinShotSize = [8, 6, 8, 12][difficulty];
 							let rinShotSpeed = [0.9, 1.1, 1.3, 1.6][difficulty];
 							let principalAngle = Math.PI * 2 * 0.618 * frame / (rinShotSize * rinShotInterval) + randomReal(-0.1, 0.1);
@@ -1152,7 +1155,7 @@ export const Bosses = {
 						// Processes Lexan's shots.
 						let lexanShotInterval = [100, 50, 48, 47][difficulty];
 						if (t % lexanShotInterval === 0) {
-							playSingleAudio("se_tan00", "rinlexan" + frame, 0.3);
+							playSingleAudio("se_tan00", "EN", "rinlexan" + frame, 0.3);
 							let lexanShotSize = [4, 3, 4, 6][difficulty];
 							let reversalDistance = [500, 600, 700, 800][difficulty]; // The initial distance from the player that a bullet needs to be to be deflected. This decreases by 0.5 per frame.
 							let maxClosestApproachDistance = [240, 225, 210, 200][difficulty];
@@ -1176,7 +1179,7 @@ export const Bosses = {
 					} else if (Bosses.lexan.attacks.S7.phase === 2) {
 						let mutualShotInterval = [100, 100, 90, 75][difficulty];
 						if (t % mutualShotInterval === 0) {
-							playSingleAudio("se_kira00", "rinlexan" + frame);
+							playSingleAudio("se_kira00", "EN", "rinlexan" + frame);
 							let shotSize = [12, 16, 24, 32][difficulty];
 							let radialSpeed = [1.6, 1.7, 1.8, 1.9][difficulty];
 							let angularSpeed = [0.06, 0.075, 0.085, 0.09][difficulty];
@@ -1250,7 +1253,7 @@ export const Bosses = {
 				explosiveShot: function(targetX, cinderPhase) {
 					// Like the explosive shots of magma elementals, but they shoot less bullets and slower, but with a much larger horizontal reach.
 					// They also create firework bullets that move almost straight upwards, and explode, creating rings of cinders at a constant phase.
-					playAudio("se_boon00");
+					playAudio("se_boon00", "EN");
 					let totalLavaBullets = [27, 30, 33, 36][difficulty];
 					let lavaVerticalMaxSpeed = [7, 7.5, 8.1, 9][difficulty];
 					let lavaHorizontalMaxSpeed = [0.33, 0.44, 0.5, 0.5][difficulty];
@@ -1262,8 +1265,8 @@ export const Bosses = {
 						// Reach the target position after exactly 60 frames.
 						this.position = addVectors(this.position, v);
 						if (t === 60) {
-							playSingleAudio("se_kira00", "magmaelementalexplosion1_" + frame, 0.3);
-							playSingleAudio("se_don00", "magmaelementalexplosion2_" + frame, 0.9);
+							playSingleAudio("se_kira00", "EN", "magmaelementalexplosion1_" + frame, 0.3);
+							playSingleAudio("se_don00", "EN", "magmaelementalexplosion2_" + frame, 0.9);
 							let realMaximumY = this.position[1] + 5;
 							// Creates lava bullets.
 							for (let bulletNum = 0; bulletNum < totalLavaBullets; bulletNum++) {
@@ -1295,7 +1298,7 @@ export const Bosses = {
 									}
 								}, circularRenderFunction(4, hsltohex(hue, 100, 45), hsltohex(hue, 100, 50)), radialCollisionCheck(4));
 								if (this.position[1] < explosionHeight) {
-									playAudio("se_enep02", 0.75);
+									playAudio("se_enep02", "EN", 0.4);
 									for (let ringNum = 0; ringNum < [3, 3, 4, 4][difficulty]; ringNum++) {
 										for (let bulletNum = 0; bulletNum < cinderRingSize; bulletNum++) {
 											let angle = cinderPhase + Math.PI * (bulletNum * 2 + ringNum) / cinderRingSize;
@@ -1369,13 +1372,13 @@ export const Bosses = {
 					}, circularRenderFunction(4, "#cccccc", "#ffffff"), radialCollisionCheck(4), (startVelocityX === 0) ? 900 : 270, (startVelocityY === 0) ? 900 : 320, {indestructible: true});
 				},
 				createMemoryShard: function(targetPosition, timer, isWeak = false) {
-					playSingleAudio("se_boon00", "memoryshard" + frame);
+					playSingleAudio("se_boon00", "EN", "memoryshard" + frame);
 					// Approaches the target position from either the top or bottom of the screen, depending on the player's position.
 					createEnemy([targetPosition[0], (playerPosition[1] < targetPosition[1]) ? 420 : -420], function(t) {
 						this.position[1] = this.position[1] * 0.96 + targetPosition[1] * 0.04;
 						if (timer < t) {
-							if (t % 5 === 0) {
-								playSingleAudio("se_kira00", "memoryshardbullet" + frame, 0.5);
+							if (t % 7 === 0) {
+								playSingleAudio("se_kira00", "EN", "memoryshardbullet" + frame, 0.5);
 							}
 							let totalBullets = isWeak ? [1, 2, 3, 4][difficulty] : [16, 20, 24, 28][difficulty];
 							let minSpeed = [0.165, 0.15, 0.135, 0.125][difficulty];
@@ -1398,13 +1401,13 @@ export const Bosses = {
 					}, memoryShardRenderFunction(timer), radialCollisionCheck(17), 100, 1000, {power: 1}, undefined, undefined, undefined, {invincible: true}); // Store the timer for the render function.
 				},
 				createAmberShard: function(targetPosition) {
-					playSingleAudio("se_boon00", "memoryshard" + frame);
+					playSingleAudio("se_boon00", "EN", "memoryshard" + frame);
 					// Again, approaches the target position from either the top or bottom of the screen.
 					createEnemy([targetPosition[0], (playerPosition[1] < targetPosition[1]) ? 350 : -350], function(t) {
 						this.position[1] = this.position[1] * 0.96 + targetPosition[1] * 0.04;						
 						if ((50 <= t) && (t % 3 === 0)) {
 							if (t % 9 === 0) {
-								playAudio("se_tan00", 0.3);
+								playAudio("se_tan00", "EN", 0.25);
 							}
 							let totalAngles = [4, 5, 6, 8][difficulty];
 							let averageSpeed = [2.4, 2.5, 2.7, 3][difficulty];
@@ -1432,7 +1435,7 @@ export const Bosses = {
 					// The centres of adjacent walls are 200 pixels apart.
 					let wallInterval = 200;
 					if (numberIsBounded(100, t, 1700) && ((t - 100) % wallInterval === 1)) {
-						playSingleAudio("se_tan00", "lexansurvival" + frame);
+						playSingleAudio("se_tan00", "EN", "lexansurvival" + frame, 0.5);
 						let wallWidth = [64, 64, 64, 64][difficulty];
 						let wallSpeed = [0.8, 0.8, 0.8, 0.8][difficulty];
 						let wallSpacing = [240, 208, 184, 160][difficulty];
@@ -1455,7 +1458,7 @@ export const Bosses = {
 					// Starting with the fifth set, gas is shot in the interval between two walls as well.
 					// After the ninth set, the walls become stationary, and gas is now shot twice as frequently again.
 					if ([301, 501, 701, 901, 1001, 1101, 1201, 1301, 1401, 1501, 1601, 1701, 1751, 1801, 1851, 1901, 1951, 2001, 2051, 2101, 2151, 2201, 2251, 2301].includes(t)) {
-						playSingleAudio("se_tan00", "lexansurvival" + frame);
+						playSingleAudio("se_tan00", "EN", "lexansurvival" + frame, 0.5);
 						let startPosition = randomPolarVector(400);
 						let principalAngle = angleToPlayer(startPosition);
 						let angleSpread = [0.1, 0.115, 0.13, 0.15][difficulty];
@@ -1471,7 +1474,7 @@ export const Bosses = {
 						}
 					}
 					if (t === 2450) {
-						playAudio("se_boon01"); // This is when the walls close in on the player.
+						playAudio("se_boon01", "EN"); // This is when the walls close in on the player.
 					}
 					// In the second phase, sequentially creates 7 red shards which stay stationary for a while, then shoot bullets which reach all parts of the screen except those immediately adjacent to each shard.
 					// The first shard is in the centre of the screen.
@@ -1511,7 +1514,7 @@ export const Bosses = {
 			},
 			S10: { // Final spell.
 				name: "\"Exotic Matter World of Universal Gravitation\"",
-				HP: 0.9000,
+				HP: 9000,
 				guaranteedScore: 1000000,
 				captureScore: 9000000,
 				dropList: {},
@@ -1543,7 +1546,7 @@ export const Bosses = {
 							beginCutscene();
 						});
 					} else {
-						playAudio("se_pldead00");
+						playAudio("se_pldead00", "EN");
 						endGame();
 						processVirtueGain();
 						setTimeout(function() {
@@ -1555,7 +1558,7 @@ export const Bosses = {
 				behaviourFunction: function(t) {
 					if (this.currentPhase < this.calculatePhase()) {
 						this.currentPhase++;
-						playAudio("se_tan00");
+						playAudio("se_tan00", "EN", 0.7);
 					}
 					if (t === 1) {
 						if (playerPosition[1] < -150) { // Prevent Lexan ramming the player if they are right at the top of the screen. We do this here rather than at the end of spell 9 so drops are not instantly despawned.
@@ -1565,7 +1568,7 @@ export const Bosses = {
 					}
 					// Creates a black hole which attracts all other bullets, as well as the player.
 					if (t === 100) {
-						playAudio("se_big");
+						playAudio("se_big", "EN");
 						createBullet([0, -150], function(t) {
 							// Moves up to the desired position at [0, -240].
 							this.position[1] = this.position[1] * 0.98 - 4.8;
@@ -1609,7 +1612,7 @@ export const Bosses = {
 					// Phase 1. Spawns random bullets with random velocities off the screen.
 					if (100 < t) {
 						if (t % 6 === 0) {
-							playAudio("se_tan00", 0.07);
+							playAudio("se_tan00", "EN", 0.07);
 						}
 						let phase1BulletsPerFrame = [0.25, 0.35, 0.45, 0.6][difficulty];
 						let phase1BulletMaxSpeed = [0.3, 0.4, 0.7, 1][difficulty];
@@ -1631,7 +1634,7 @@ export const Bosses = {
 						let phase2WaveDuration = [33, 51, 75, 99][difficulty];
 						if ((t % phase2WavePeriod < phase2WaveDuration) && (t % 3 === 0) && (this.phase2PrincipalAngle !== undefined)) {				
 							if (t % 6 === 0) {
-								playAudio("se_tan00", 0.12);
+								playAudio("se_tan00", "EN", 0.12);
 							}
 							let phase2RingSize = [10, 12, 14, 16][difficulty];
 							for (let bulletNum = 0; bulletNum < phase2RingSize; bulletNum++) {
@@ -1647,7 +1650,7 @@ export const Bosses = {
 						let phase3RingSpeed = [2, 2.5, 3.2, 4][difficulty];
 						let phase3RingInterval = [100, 75, 60, 50][difficulty];
 						if (t % phase3RingInterval === 0) {
-							playAudio("se_lgods4");
+							playAudio("se_lgods4", "EN");
 							for (let bulletNum = 0; bulletNum < phase3RingSize; bulletNum++) {
 								let angle = Math.PI * (bulletNum * 2 + 1) / phase3RingSize; // Each orthogonal direction is directly between two bullet angles.
 								createBullet(addVectors(polarToCartesian(-610, angle), [0, -240]), function() {}, circularRenderFunction(8, "#990000", "#ff0000"), radialCollisionCheck(8), undefined, undefined, {velocity: polarToCartesian(phase3RingSpeed, angle), mass: 2});
@@ -1661,7 +1664,7 @@ export const Bosses = {
 						let phase4RingSize = [8, 8, 8, 8][difficulty];
 						let phase4RingSpeed = [2, 2.3, 2.4, 2.5][difficulty];
 						if (t % phase4ShotInterval === 0) {
-							playAudio("se_boon00");
+							playAudio("se_boon00", "EN");
 							let bossPosition = enemies[currentBoss.enemyId].position;
 							let angleFromPlayer = Math.PI + angleToPlayer(bossPosition);
 							for (let shotNum = 0; shotNum < phase4TotalShots; shotNum++) {
@@ -1670,7 +1673,7 @@ export const Bosses = {
 								createBullet(structuredClone(bossPosition), function(t) {
 									this.velocity = addVectors(this.velocity, multiplyVectors(startingVelocity, -0.005)); // Air resistance
 									if (t === 90) {
-										playAudio("se_kira00", 1);
+										playAudio("se_kira00", "EN", 1);
 										let principalAngle = Math.PI * 2 * Math.random();
 										for (let bulletNum = 0; bulletNum < phase4RingSize; bulletNum++) {
 											let angle = principalAngle + Math.PI * 2 * bulletNum / phase4RingSize;
@@ -1703,14 +1706,14 @@ function lexanNonspell(startPosition, spawnerRingSize, spawnerRingSpeed, spawner
 	// One or more rings of arrow bullets are shot in a circle, and upon traveling a certain distance, these split into:
 	// (a) lasers of smaller arrow bullets travelling in the same direction but at a faster speed;
 	// (b) rings of small white circle bullets, which are oriented such that one bullet in every ring is aimed at the player.
-	playSingleAudio("se_tan00", "lexanNonspellSpawn" + frame, 0.4);
+	playSingleAudio("se_tan00", "EN", "lexanNonspellSpawn" + frame, 0.3);
 	for (let spawnerNum = 0; spawnerNum < spawnerRingSize; spawnerNum++) {
 		let angle = spawnerRingPhase + Math.PI * 2 * spawnerNum / spawnerRingSize;
 		createBullet(addVectors(startPosition, polarToCartesian(30, angle)), function(t) {
 			let radius = 30 + spawnerRingSpeed * t * (t + 50) / 50;
 			this.position = addVectors(startPosition, polarToCartesian(radius, angle));
 			if (radius > spawnerSplitPoint) {
-				playSingleAudio("se_kira00", "lexanNonspellSplit" + frame, 0.8);
+				playSingleAudio("se_kira00", "EN", "lexanNonspellSplit" + frame, 0.6);
 				// Create the laser first.
 				let extraT = t;
 				let radiusAtSplit = 30 + spawnerRingSpeed * extraT * (extraT + 50) / 50;
@@ -1860,11 +1863,7 @@ export const dialogueList = {
 	12: {
 		speaker: "Lexan",
 		text: "But alas... after the second Annuation, it collapsed and never erupted again.",
-		maxFrames: 300,
-		onAdvance: function() {
-			hideBossTitleCard();
-			startDialogue(13);
-		}
+		maxFrames: 300
 	},
 	13: {
 		speaker: "Lexan",
@@ -2031,7 +2030,7 @@ export const dialogueList = {
 		onAdvance: function() {
 			endCutscene();
 			currentDialogueId = undefined;
-//			skipPhases(9);
+//			skipPhases(7);
 		}
 	},
 	// Lexan's post-fight dialogue

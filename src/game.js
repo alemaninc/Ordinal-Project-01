@@ -10,7 +10,7 @@ import { circularRenderFunction, drawCanvas } from "./visuals.js";
 // Difficulty is 0, 1, 2 or 3 for easy, normal, hard or lunatic respectively.
 export var difficulty;
 // `gameClockId` is the value created by setInterval when the game clock is initiated.
-var gameClockId;
+export var gameClockId;
 // The radius of the player.
 export var playerHitboxRadius = 4.5;
 // The maximum deflection from the centre of a ray at which the player's bomb ("Alpha Scattering") does damage.
@@ -180,7 +180,7 @@ const itemCollectionFunctions = {
 		if (power < 400) {
 			power++;
 			if (power % 100 === 0) {
-				playAudio("se_powerup");
+				playAudio("se_powerup", "PL");
 			}
 			score += 100;
 		} else {
@@ -189,7 +189,7 @@ const itemCollectionFunctions = {
 	},
 	fullpower: function() { // Gives 1.00 power, or if the player is at 3.00 power or above, gives 10 000 score per 0.01 power above this.
 		if (power < 400) { // Power will always go up in this case.
-			playAudio("se_powerup");
+			playAudio("se_powerup", "PL");
 		}
 		score += 10000 * Math.max(power - 300, 0);
 		power = Math.min(power + 100, 400);
@@ -199,13 +199,13 @@ const itemCollectionFunctions = {
 	},
 	lifepiece: function() {
 		if (lives % 3 === 2) {
-			playAudio("se_extend");
+			playAudio("se_extend", "PL");
 		}
 		lives = Math.min(lives + 1, 24);
 	},
 	extend: function() {
 		if (lives < 24) {
-			playAudio("se_extend");
+			playAudio("se_extend", "PL");
 		}
 		lives = Math.min(lives + 3, 24);
 	},
@@ -308,9 +308,9 @@ export function useBomb() {
 			document.getElementById("div_playerSpellCard").style.opacity = 0;
 		}, 2400);
 		bombs -= 3;
-		playAudio("se_nep00");
+		playAudio("se_nep00", "PL");
 	} else {
-		playAudio("se_invalid");
+		playAudio("se_invalid", "MENU");
 	}
 }
 // Uses a continue.
@@ -420,7 +420,7 @@ export function startBossPhase(currentPhaseId) { // `phaseId` is "Nn" for the nt
 		clearScreen(Bosses[currentBoss.bossId].autocollectAtEnd);
 		currentBoss.bossId = undefined;
 		document.getElementById("div_bossSpellCard").style.opacity = 0;
-		playAudio("se_enep01");
+		playAudio("se_enep01", "EN");
 	} else {
 		let bossData = Bosses[currentBoss.bossId];
 		let nextAttackData = bossData.attacks[nextId];
@@ -437,7 +437,7 @@ export function startBossPhase(currentPhaseId) { // `phaseId` is "Nn" for the nt
 		document.getElementById("div_bossSpellCard").innerText = "";
 		if (currentBoss.isInSpellCard) {
 			scheduleUnclearableStageEvent(25, function() { // Give potential previous spell card time to disappear.
-				playAudio("se_cat00");
+				playAudio("se_cat00", "EN");
 				document.getElementById("div_bossSpellCard").innerText = Bosses[currentBoss.bossId].attacks[nextId].name;
 				document.getElementById("div_bossSpellCard").style.opacity = 1;
 				document.getElementById("div_bossSpellCard").style.textDecorationColor = Bosses[currentBoss.bossId].color;
@@ -510,18 +510,18 @@ function processFrame() {
 	let bombRange = playerBombRange();
 	let guaranteedBombRange = playerBombGuaranteedRange();
 	// Determine the player speed, and adjust the player's position.
-	let speed = (activeKeys.Shift || bombActive) ? (2.4 * upgradeEffectValues.speedDown) : (7.2 * upgradeEffectValues.speedUp);
-	if (activeKeys.ArrowLeft) {
+	let speed = (activeKeys.shift || bombActive) ? (2.4 * upgradeEffectValues.speedDown) : (7.2 * upgradeEffectValues.speedUp);
+	if (activeKeys.arrowleft) {
 		playerPosition[0] -= speed;
 	}
-	if (activeKeys.ArrowRight) {
+	if (activeKeys.arrowright) {
 		playerPosition[0] += speed;
 	}
 	playerPosition[0] = Math.max(-244, Math.min(playerPosition[0], 244)); // 5 pixels less than screen size to prevent hitbox being halfway out.
-	if (activeKeys.ArrowUp) {
+	if (activeKeys.arrowup) {
 		playerPosition[1] -= speed;
 	}
-	if (activeKeys.ArrowDown) {
+	if (activeKeys.arrowdown) {
 		playerPosition[1] += speed;
 	}
 	playerPosition[1] = Math.max(-294, Math.min(playerPosition[1], 294));
@@ -529,7 +529,7 @@ function processFrame() {
 		enemies[currentBoss.enemyId].position = addVectors(multiplyVectors(enemies[currentBoss.enemyId].position, 0.95), multiplyVectors(currentBoss.targetPosition, 0.05));
 		let attackTimeLeft = Bosses[currentBoss.bossId].attacks[(currentBoss.isInSpellCard ? "S" : "N") + currentBoss.phase].maxFrames - currentBoss.currentAttackTime;
 		if ((attackTimeLeft <= 500) && (attackTimeLeft % 50 === 0)) {
-			playAudio("se_timeout");
+			playAudio("se_timeout", "EN");
 		}
 	}
 	if (!isInCutscene) { // In cutscenes, we do not run any enemy or bullet behaviour.
@@ -554,7 +554,7 @@ function processFrame() {
 			}
 			if (enemyData.HP <= 0) {
 				if (attackData.slowDefeat) { // Prevent the boss from being defeated for 2 seconds while the game slows down on the last spell.
-					playAudio("se_enep01");
+					playAudio("se_enep01", "EN");
 					attackData.slowDefeat = false;
 					finalSpellSlowdown = true;
 					enemyData.HP = 1;
@@ -569,10 +569,10 @@ function processFrame() {
 							score += spellCardBonus();
 							totalSpellCardsCaptured++;
 							document.getElementById("div_bossSpellCaptureText").innerText = "Get Spell Card!"
-							playAudio("se_cardget");
+							playAudio("se_cardget", "EN");
 						} else {
 							document.getElementById("div_bossSpellCaptureText").innerText = "Bonus Failed..."
-							playAudio("se_fault");
+							playAudio("se_fault", "EN");
 						}
 						document.getElementById("div_bossSpellCaptureText").style.opacity = 1;
 						setTimeout(function() {
@@ -598,7 +598,7 @@ function processFrame() {
 			}
 			if ((currentBoss.bossId === undefined) || (id != currentBoss.enemyId)) { // Boss behaviour gets run separately, except for collisions.
 				if (enemies[id].HP <= 0) {
-					playAudio("se_enep00", 0.25);
+					playAudio("se_enep00", "EN", 0.25);
 					score += enemies[id].score;
 					processEnemyDrops(enemies[id].position, enemies[id].dropList);
 					if (enemies[id].onDefeat !== undefined) {
@@ -624,7 +624,7 @@ function processFrame() {
 						enemies[id].HP -= playerBullets[id2].damage;
 					}
 					score += 10;
-					playSingleAudio("se_damage00", "enemydamage" + frame, 0.08);
+					playSingleAudio("se_damage00", "PL", "enemydamage" + frame, 0.1);
 					delete playerBullets[id2];
 				}
 			}
@@ -670,13 +670,13 @@ function processFrame() {
 		}
 		graze += grazesThisFrame;
 		if (grazesThisFrame !== 0) { // Do not play the graze sound effect more than once per frame.
-			playAudio("se_graze");
+			playAudio("se_graze", "PL");
 		}
 		pointValue += grazesThisFrame * 50;
 		// If there was a collision between a player and a bullet or enemy, add a miss.
 		// If no bomb happens in the next 0.1s, remove a life and reset enemy bullets and the player's position, otherwise add graze.
 		if (collisionThisFrame && ((frame - lastMiss) > 100) && (frame - lastBomb > 350)) { // Misses must be at least 2s apart, and cannot happen during a bomb or within 1s of after a bomb.
-			playAudio("se_pldead00");
+			playAudio("se_pldead00", "PL");
 			lastMiss = frame;
 		}
 		if ((frame - lastMiss === 5) && (!bombActive)) {
@@ -705,7 +705,7 @@ function processFrame() {
 	}
 	// Process any bonus before dealing with the motion of items.
 	if (score >= scoreForNextBonus()) { // Run this in an if rather than a while to prevent audio spam if multiple bonuses are obtained at once (e.g. when Lexan's 9th is captured)
-		playAudio("se_bonus");
+		playAudio("se_bonus", "PL");
 	}
 	while (score >= scoreForNextBonus()) {
 		processScoreBonus();
@@ -727,7 +727,7 @@ function processFrame() {
 			delete items[id];
 		} else if (dist < 100) {
 			itemCollectionFunctions[items[id].type]();
-			playAudio("se_item00");
+			playAudio("se_item00", "PL");
 			delete items[id];
 		} else if (dist < (["point", "power"].includes(items[id].type) ? 2500 : (items[id].type === "fullpower") ? 4225 : 6400)) { // Collection radius is 50px for point and power items, 65px for full power and 80px for large items.
 			items[id].autocollect = true;
@@ -735,12 +735,10 @@ function processFrame() {
 	}
 	// Spawn the player's bullets. We spawn auxiliary bullets every 3 seconds, and central bullets every 2 frames.
 	// We also adjust the oscillation of the player's bullets here. The rate of decay towards the desired value is approximately proportional to the square root of the discrepancy.
-	let desiredPlayerBulletOscillation = activeKeys.Shift ? (12 + Math.floor(power / 100) * 3) : (30 + Math.floor(power / 100) * 7.5);
 	if ((activeKeys.z || upgradeEffectValues.autoShoot) && (!isInCutscene)) { // Z = is shooting
 		if ((frame % 5) === 0) {
-			playAudio("se_plst00", 0.25);
+			playAudio("se_plst00", "PL", 0.25);
 		}
-		playerBulletOscillation = playerBulletOscillation + Math.sign(desiredPlayerBulletOscillation - playerBulletOscillation) * (Math.sqrt(Math.abs(desiredPlayerBulletOscillation - playerBulletOscillation) + 1) - 1) * 0.2;
 		let instantaneousPlayerPosition = structuredClone(playerPosition);
 /*		if ((frame % 3) === 0) {
 			let currentOscillation = playerBulletOscillation;
@@ -756,7 +754,7 @@ function processFrame() {
 			let auxiliaryBulletStartPoints = [[16, -24], [24, -10], [32, -20], [40, -8]];
 			let auxiliaryBulletHorizontalSpeeds = [0.1, 0.18, 0.28, 0.4];
 			let auxiliaryBulletVerticalSpeeds = [1.48, 1.4, 1.44, 1.36];
-			let focusHorizontalFactor = activeKeys.Shift ? 0.7 : 1;
+			let focusHorizontalFactor = activeKeys.shift ? 0.7 : 1;
 			for (let i = 0; i < Math.floor(power / 100); i++) {
 				for (let direction of [-1, 1]) {
 					createPlayerBullet(addVectors(instantaneousPlayerPosition, [(auxiliaryBulletStartPoints[i][0] * focusHorizontalFactor + 4) * direction, auxiliaryBulletStartPoints[i][1] * focusHorizontalFactor]), function(t) {
@@ -871,7 +869,7 @@ export function togglePause() {
 		document.getElementById("window_game").style.display = "block"; // Makes the game visible in the background.
 		pauseBGM();
 		gameIsPaused = true;
-		playAudio("se_pause");
+		playAudio("se_pause", "MENU");
 	}
 }
 function gameClock() {

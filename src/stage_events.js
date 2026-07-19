@@ -20,7 +20,7 @@ function createYinYangOrb(targetPosition, streamingBulletMinTime, streamingBulle
 		[this.position, this.bezierT] = processBezierMotion([[targetPosition[0], -320], targetPosition, targetPosition, targetPosition, [Math.sign(targetPosition[0]) * -350, targetPosition[1] + 50]], this.bezierT, this.speed);
 		// Creates streaming bullets.
 		if ((t - streamingBulletTime) % streamingBulletInterval === 1) {
-			playSingleAudio("se_tan00", "yinyangstream" + frame, 0.25);
+			playSingleAudio("se_tan00", "EN", "yinyangstream" + frame, 0.25);
 			let angle = angleToPlayer(this.position);
 			if (Math.random() < streamingBulletDeflectionChance) {
 				angle += streamingBulletMaxDeflection * (Math.random() * 2 - 1);
@@ -34,7 +34,7 @@ function createYinYangOrb(targetPosition, streamingBulletMinTime, streamingBulle
 		}		
 		// Creates random bullets.
 		if ((t > 25) && (t % randomBulletInterval === 0)) {
-			playSingleAudio("se_tan00", "yinyangrandom" + frame, 0.05);
+			playSingleAudio("se_tan00", "EN", "yinyangrandom" + frame, 0.05);
 			let v = randomPolarVector(randomBulletMinSpeed, randomBulletMaxSpeed);
 			createBullet(addVectors(this.position, randomCartesianVector(15)), function() {
 				this.position = addVectors(this.position, v);
@@ -72,7 +72,7 @@ function createAmberShard(targetPosition, factor78 = Math.random()) {
 			targetPosition = clampVector(targetPosition, initialTarget[0] - 60, initialTarget[0] + 60, initialTarget[1] - 40, initialTarget[1] + 40);
 		}
 		if ((t > 50) && (t < 375) && (t % diamondInterval === Math.min(diamondInterval - 1, 19))) {
-			playSingleAudio("se_tan00", "ambersharddiamonds" + frame, 0.25);
+			playSingleAudio("se_tan00", "EN", "ambersharddiamonds" + frame, 0.25);
 			let phase = angularFrequency * frame;
 			for (let diamondNum = 0; diamondNum < diamondsPerWave; diamondNum++) {
 				let angle = (diamondNum + phase) * Math.PI * 2 / diamondsPerWave;
@@ -99,7 +99,7 @@ function createAmberShard(targetPosition, factor78 = Math.random()) {
 		for (let bulletNum = 0; bulletNum <= bulletsPerAngle; bulletNum++) { // We process bullets outside angles to prevent scheduling more than 1 event per frame.
 			scheduleStageEvent((bulletNum === 0) ? 1 : (bulletNum * 3 + 14), function() {
 				if (bulletNum % 3 === 0) {
-					playSingleAudio("se_tan00", "ambershardfire" + frame, 0.25);
+					playSingleAudio("se_tan00", "EN", "ambershardfire" + frame, 0.25);
 				}
 				for (let angleNum = 0; angleNum < totalAngles; angleNum++) {
 					let primaryAngle = angleToPlayer(position); // Tracks the player during the burst.
@@ -133,7 +133,7 @@ function createAmberOrb(targetPosition) {
 	createEnemy([targetPosition[0], -350], function(t) {
 		this.position[1] = this.position[1] * 0.95 + targetPosition[1] * 0.05;
 		if ((t >= 60) && (t <= 475) && (t % waveInterval === 0)) {
-			playAudio("se_tan00", 0.15);
+			playAudio("se_tan00", "EN", 0.15);
 			// Maximum frequency at 1/4 T, 5/4 T, 9/4 T, etc. Minimum frequency at 3/4 T, 7/4 T, 11/4 T, etc.
 			// Wave size changes occur at average frequency - i.e. 1/2 T, T, 3/2 T, etc.
 			let principalAngle = averageAngularFrequency * (frame - period * Math.cos(2 * Math.PI * frame / period) / (2 * Math.PI));
@@ -177,7 +177,7 @@ function createAmberOrbDiamondWaves(centre, amount, firstSize = (difficulty === 
 		let waveSpeed = initialSpeed + 0.05 * waveNum;
 		let principalAngle = randomReal(0, Math.PI * 2);
 		scheduleStageEvent((waveNum === 0) ? 1 : (waveNum * ((difficulty === 3) ? 7 : 3) + 12), function() {
-			playAudio("se_kira00", 0.5);
+			playAudio("se_kira00", "EN", 0.5);
 			for (let bulletNum = 0; bulletNum < waveSize; bulletNum++) {
 				let angle = principalAngle + Math.PI * 2 * bulletNum / waveSize;
 				let v = polarToCartesian(waveSpeed, angle);
@@ -251,7 +251,7 @@ const UFOShots = {
 		let shotInterval = [4, 4, 4, 4][difficulty];
 		if (t % shotInterval === 0) {
 			if (t % (shotInterval * 2) === 0) {
-				playAudio("se_tan00", 0.15);
+				playAudio("se_tan00", "EN", 0.15);
 			}
 			let numberOfAngles = [3, 4, 5, 6][difficulty];
 			let bulletsPerAngle = [7, 8, 9, 11][difficulty];
@@ -274,7 +274,7 @@ const UFOShots = {
 		// Shoots large ring bullets following curved paths. On higher difficulties, bullets move faster, are fired more frequently and have a higher angular velocity.
 		if (frame % 3 === 0) {
 			if (t % 6 === 0) {
-				playAudio("se_tan00", 0.15);
+				playAudio("se_tan00", "EN", 0.15);
 			}
 			let bulletsPerFrame = [3, 4, 5, 7][difficulty];
 			let radialSpeed = [105, 115, 130, 150][difficulty];
@@ -295,7 +295,7 @@ const UFOShots = {
 		// Creates rotating rings of L's which interlock with each other.
 		let waveInterval = [28, 24, 20, 18][difficulty];
 		if (frame % waveInterval === 0) {
-			playAudio("se_tan00", 0.3);
+			playAudio("se_tan00", "EN", 0.3);
 			let waveSpeed = 144 / waveInterval;
 			let waveOrientation = (frame % (waveInterval * 2) < waveInterval) ? 1 : -1;
 			let angularSpeed = [0.005, 0.006, 0.007, 0.008][difficulty] * waveOrientation;
@@ -321,7 +321,7 @@ const UFOShots = {
 		// Creates Z-shapes which move linearly and rotate about their own centres.
 		let waveInterval = [18, 15, 12, 10][difficulty];
 		if (frame % waveInterval === 0) {
-			playAudio("se_tan00", 0.3);
+			playAudio("se_tan00", "EN", 0.3);
 			let waveSize = [4, 5, 6, 8][difficulty];
 			let waveSpeed = [3.2, 4, 5, 6][difficulty];
 			let angularSpeed = [0.02, 0.035, 0.05, 0.07][difficulty] * plusMinus1();
@@ -346,7 +346,7 @@ const UFOShots = {
 		// Creates static waves of T-shapes moving linearly.
 		let waveInterval = [25, 21, 18, 16][difficulty];
 		if (frame % waveInterval === 0) {
-			playAudio("se_tan00", 0.3);
+			playAudio("se_tan00", "EN", 0.3);
 			let waveSize = [15, 16, 17, 18][difficulty];
 			let waveSpeed = [4.8, 6, 7.2, 8.4][difficulty];
 			let phase = (frame / (waveInterval * 2)) % 2;
@@ -379,7 +379,7 @@ function createSuperAmberShard(targetPosition, factor78 = Math.random()) {
 		this.position[1] += speed;
 		if ((50 <= t) && (t <= 275) && (t % 2 === 0)) {
 			if (t % 8 === 0) {
-				playAudio("se_tan00", 0.3);
+				playAudio("se_tan00", "EN", 0.3);
 			}
 			let totalAngles = [7, 9, 11, 13][difficulty];
 			let averageSpeed = [5.5, 6.5, 7.5, 9][difficulty];
@@ -426,7 +426,7 @@ function createBlueSpirit(targetPosition) {
 			this.isAutokilled = true;
 		}
 	}, spiritRenderFunction("#00ffff", "#99ffff"), radialCollisionCheck(8), 10, 1000, {point: 1, power: 1}, function(position) {
-		playAudio("se_kira00", 0.3);
+		playAudio("se_kira00", "EN", 0.3);
 		let waveSize;
 		if (this.isAutokilled) {
 			waveSize = [8, 16, 28, 60][difficulty];
@@ -506,7 +506,7 @@ function witchShot1(position) {
 	let glyphPhase = Math.PI * 2 * Math.random();
 	createBullet(addVectors(position, randomCartesianVector(5)), function(t) {
 		if (t % 5 === 0) {
-			playAudio("se_kira00", 0.3);
+			playAudio("se_kira00", "EN", 0.3);
 		}
 		if (t % 10 === 0) {
 			// Focus of each glyph is (0, -150), regardless of its spawn point.
@@ -553,7 +553,7 @@ function witchShot2Bullet(position, angle, lifespan = 207) {
 		}
 		this.position = addVectors(this.position, polarToCartesian(spawnerSpeed, this.angle));
 		if (frame % 5 === 0) { // Run this outside the spawn interval check as they will not always match.
-			playSingleAudio("se_kira00", "witchshot2_" + frame, 0.3);
+			playSingleAudio("se_kira00", "EN", "witchshot2_" + frame, 0.3);
 		}
 		if (t % spawnInterval === 0) {
 			let angle = glyphPhase + Math.PI * 2 * 0.6180339887 * t / spawnInterval;
@@ -576,7 +576,7 @@ function createEye(position, deflectionMult) {
 	let dropIfAutokilled = [0, 3, 5, 6].includes(eyeSpawnCounter % 8) ? {point: 1} : {power: 1};
 	createEnemy(position, function(t) {
 		if (t === 50) {
-			playSingleAudio("se_tan00", "eyeshot" + frame, 0.2);
+			playSingleAudio("se_tan00", "EN", "eyeshot" + frame, 0.2);
 			let principalAngle = angleToPlayer(position);
 			let laserMinSpeed = [4.5, 5, 5.8, 8][difficulty];
 			let laserMaxSpeed = [6, 7, 8, 10][difficulty];
@@ -618,7 +618,7 @@ function createRedSpirit(initialAngle, angularDirection, verticalOffset) {
 			}, circularRenderFunction(7, this.outerColor, this.innerColor), radialCollisionCheck(7));
 		}
 		if (t === 450) {
-			playSingleAudio("se_boon01", "redSpiritTransition" + frame, 0.75);
+			playSingleAudio("se_boon01", "EN", "redSpiritTransition" + frame, 0.75);
 		}
 		if (t >= 450) { // This is when the red spirits become damageable and start shooting secondary bullets.
 			let colorTransitionProgress = Math.min(t / 50 - 9, 1);
@@ -634,7 +634,7 @@ function createRedSpirit(initialAngle, angularDirection, verticalOffset) {
 				totalBullets--;
 			}
 			if ((t >= 480) && (t <= 600) && (t % shotInterval === 0)) {
-				playSingleAudio("se_kira00", "redSpiritShot" + frame, 0.3);
+				playSingleAudio("se_kira00", "EN", "redSpiritShot" + frame, 0.3);
 				let principalAngle = Math.PI * 2 * Math.random();
 				let initialSpeed = [0.6, 0.8, 1, 1.2][difficulty];
 				for (let bulletNum = 0; bulletNum < totalBullets; bulletNum++) {
@@ -663,7 +663,7 @@ function createSpecialEye(distanceFromOrigin, angleFromOrigin) {
 				this.HP = 0;
 			}
 			if (t % (shotInterval / 15) <= (shotInterval / 30)) {
-				playAudio("se_tan00", 0.2);
+				playAudio("se_tan00", "EN", 0.2);
 			}
 			let principalAngle = angleToPlayer(position);
 			let laserMinSpeed = [4, 5, 6.5, 7.5][difficulty];
@@ -720,7 +720,7 @@ function createYellowSpirit(targetPosition) {
 		}
 		let waveSpeed = [2.8, 3.2, 4.2, 5.6][difficulty];
 		let angularSpeed = [0.06, 0.075, 0.095, 0.12][difficulty];
-		playAudio("se_kira00", 0.3);
+		playAudio("se_kira00", "EN", 0.3);
 		for (let waveOrientation of [-1, 1]) {
 			let principalAngle = Math.PI * 2 * Math.random();
 			for (let bulletNum = 0; bulletNum < waveSize; bulletNum++) {
@@ -755,7 +755,7 @@ function createMagmaElemental(targetPosition) {
 		}
 		let fireWaveInterval = [6, 5, 4, 3][difficulty];
 		if ((this.explosiveShotsLanded > 0) && (t <= 450) && (t % fireWaveInterval === 0)) {
-			playAudio("se_tan00", 0.08);
+			playAudio("se_tan00", "EN", 0.08);
 			let fireWaveSize = [8, 10, 13, 16][difficulty];
 			let fireWaveMaxSpeed = [6.3, 7.5, 9.4, 11.8][difficulty];
 			for (let bulletNum = 0; bulletNum < fireWaveSize; bulletNum++) {
@@ -808,8 +808,8 @@ function magmaElementalExplosiveShot(position, magmaElementalId, horizontalDirec
 			this.position[0] = Math.sign(this.position[0]) * (500 - Math.abs(this.position[0]));
 		}
 		if (this.position[1] > 300) { // Create pillars of lava upon reaching the ground.
-			playSingleAudio("se_kira00", "magmaelementalexplosion1_" + frame, 0.3);
-			playSingleAudio("se_don00", "magmaelementalexplosion2_" + frame, 0.9);
+			playSingleAudio("se_kira00", "EN", "magmaelementalexplosion1_" + frame, 0.3);
+			playSingleAudio("se_don00", "EN", "magmaelementalexplosion2_" + frame, 0.9);
 			if (enemies[magmaElementalId] !== undefined) { // In case the magma elemental is already defeated.
 				enemies[magmaElementalId].explosiveShotsLanded++;
 			}
@@ -832,7 +832,7 @@ function magmaElementalExplosiveShot(position, magmaElementalId, horizontalDirec
 			this.position[0] = 1000; // Delete this bullet.
 		}
 	}, circularRenderFunction(10, "#999900", "#ffff00"), radialCollisionCheck(10), undefined, undefined, {indestructible: true}); // These are indestructible as if they do not go off then magma elementals do not shoot fire waves.
-	playAudio("se_boon00");
+	playAudio("se_boon00", "EN");
 }
 // The yin-yang orbs in the volcano section that move down shooting criss-crossing bullets, then come out of the bottom of the screen and shoot streaming bullets.
 function createYinYangOrbVariantD(orientation, latencySeed) {
@@ -850,7 +850,7 @@ function createYinYangOrbVariantD(orientation, latencySeed) {
 			let shotInterval = [80, 60, 45, 36][difficulty];
 			let shotTime = Math.round(1 + (shotInterval - 2) * latencySeed)
 			if ((this.position[1] < 300) && (t % shotInterval === shotTime)) { // Check position so audio is not played when off screen.
-				playSingleAudio("se_tan00", "yinyangcross" + frame, 0.2);
+				playSingleAudio("se_tan00", "EN", "yinyangcross" + frame, 0.2);
 				let totalBullets = [2, 4, 6, 8][difficulty];
 				let minSpeed = [3, 3.9, 4.7, 5.5][difficulty];
 				let maxSpeed = [3.5, 4.7, 6, 7.5][difficulty];
@@ -868,7 +868,7 @@ function createYinYangOrbVariantD(orientation, latencySeed) {
 			this.position[0] += 0.4 * clampNumber(0.3, 78 + pauseSeed * 2 - t / 10, 2) * Math.sin(xPhase + t * 0.04) + clampNumber(0, t / 20 - 39 - pauseSeed * 2, 1) * orientation;
 			this.position[1] -= clampNumber(0.3, 78 + pauseSeed * 2 - t / 10, 2);
 			if ((t - 585) % streamingShotInterval === streamingShotTime) {
-				playSingleAudio("se_tan00", "yinyangstream" + frame, 0.2);
+				playSingleAudio("se_tan00", "EN", "yinyangstream" + frame, 0.2);
 				let bulletSpeed = [2.4, 2.8, 3.6, 4.8][difficulty];
 				let angle = angleToPlayer(this.position) + Math.PI * [0.9, 0.7, 0.6, 0.5][difficulty] * randomReal(-1, 1) * randomReal(-1, 1); // Aim most bullets at the player, with the possibility of variable deflection.
 				let v = polarToCartesian(bulletSpeed, angle);
@@ -912,7 +912,7 @@ function createSuperMagmaElemental() {
 		if ((t - 50) % 650 < 320) { // Small and large fire waves.
 			let smallFireWaveInterval = [11, 9, 7, 5][difficulty];
 			if ((this.explosiveShotsLanded > 0) && (t % smallFireWaveInterval === 0)) {
-				playAudio("se_tan00", 0.08);
+				playAudio("se_tan00", "EN", 0.08);
 				let waveSize = [12, 15, 18, 20][difficulty];
 				let waveMaxSpeed = [5.7, 6.8, 8.5, 10.6][difficulty];
 				for (let bulletNum = 0; bulletNum < waveSize; bulletNum++) {
@@ -927,7 +927,7 @@ function createSuperMagmaElemental() {
 			}
 			let largeFireWaveInterval = [30, 25, 20, 16][difficulty];
 			if ((this.explosiveShotsLanded === totalPillars) && (t % largeFireWaveInterval === 0)) {
-				playAudio("se_tan00", 0.225);
+				playAudio("se_tan00", "EN", 0.225);
 				let waveSize = [12, 15, 18, 20][difficulty];
 				let waveMaxSpeed = [4.4, 5.3, 6.6, 8.3][difficulty];
 				for (let bulletNum = 0; bulletNum < waveSize; bulletNum++) {
@@ -943,7 +943,7 @@ function createSuperMagmaElemental() {
 		}
 		let fireWaveTimes = [[460], [460], [455, 505], [450, 485, 520]][difficulty];
 		if (fireWaveTimes.includes(t)) { // Rising fire waves.
-			playAudio("se_boon00");
+			playAudio("se_boon00", "EN");
 			for (let angle of [angleToObject(this.position, [-250, 300]), angleToObject(this.position, [250, 300])]) {
 				let speed = [6.6, 8, 10, 15][difficulty];
 				let v = polarToCartesian(speed, angle);
@@ -956,7 +956,7 @@ function createSuperMagmaElemental() {
 							let bulletsThisFrame = Math.floor(bulletsPerFrame + Math.random());
 							scheduleStageEvent(time, function() {
 								if (time % 5 === 1) {
-									playAudio("se_kira00", 0.15);
+									playAudio("se_kira00", "EN", 0.15);
 								}
 								for (let bulletNum = 0; bulletNum < bulletsThisFrame; bulletNum++) {
 									let hue = randomReal(18, 42);
@@ -1031,7 +1031,7 @@ export const stageEvents = { // The usual stage effects are such that no more th
 		Bosses.lexan.isDefeated = false;
 	},
 	10: function() {
-//		skipFrames(8980);
+//		skipFrames(18280);
 	},
 	100: function() {
 		playBGM("bgm_stage", 368, 389.8);

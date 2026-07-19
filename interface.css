@@ -224,6 +224,18 @@
 		}
 	}
 }
+.settingsTable {
+	display: inline-block;
+	font-size: 16px;
+	tr {
+		th {
+			font-weight: 700;
+		}
+		th, td {
+			width: 350px;
+		}
+	}
+}
 .creditsTable {
 	display: inline-block;
 	font-size: 16px;
@@ -251,6 +263,16 @@
 		td {
 			padding-top: 8px;
 		}
+	}
+}
+.changelogDiv {
+	position: absolute;
+	top: 65px;
+	left: 140px;
+	height: 500px;
+	width: 500px;
+	li {
+		padding-bottom: 10px;
 	}
 }
 a {

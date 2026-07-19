@@ -1,5 +1,8 @@
+import { persistentData } from "./persistent_data.js";
+
 // Use this `audioContext` to play all in-game audio.
 export const audioContext = new AudioContext();
+export const BGMNode = audioContext.createGain(); // Use this node to be able to dynamically change BGM volume. We don't do this for normal sound effects as they are unlikely to be playing while in the settings menu.
 // Stores all audio which may be played as a `buffer` to be passed to `playAudio`.
 const audio = {};
 // Lists all the audio files which must be loaded by their file name (excluding the file ending).
@@ -14,11 +17,12 @@ async function loadAudio(id) {
   audioFilesLoaded++;
 }
 // Creates a "source" to play a sound and plays it.
-function playAudioFromBuffer(buffer, volume = 1) {
+function playAudioFromBuffer(buffer, type, volume = 1) {
   let source = audioContext.createBufferSource();
   source.buffer = buffer;
   let gainNode = audioContext.createGain();
-  gainNode.gain.value = volume;
+  gainNode.gain.value = volume * persistentData.settings.volume.masterVolume * (persistentData.settings.volume[type] ?? 1);
+  console.log(gainNode.gain.value);
   gainNode.connect(audioContext.destination);
   source.connect(gainNode);
   source.start();
@@ -35,17 +39,23 @@ function playBGMFromBuffer(buffer, loopStart, loopEnd, startTime = 0) {
   source.loop = loopStart !== undefined;
   source.loopStart = loopStart;
   source.loopEnd = loopEnd;
-  source.connect(audioContext.destination);
+  let gainNode = audioContext.createGain();
+  gainNode.gain.value = persistentData.settings.volume.masterVolume * persistentData.settings.volume.BGM;
+  BGMNode.connect(audioContext.destination);
+  source.connect(BGMNode);
   source.start(0, startTime);
   activeBGMProperties.source = source;
 }
 // We store the source so that we can pause the BGM when needed, `loopStart`, `loopEnd` and `startTime` to pass into `playBGM` if a restart is needed, `startTimestamp` so we can recalculate `startTime` on pause and `id` so we can restart the sound on unpause.
 export const activeBGMProperties = {source: undefined, loopStart: undefined, loopEnd: undefined, startTime: undefined, id: undefined, startTimestamp: undefined};
 // Plays audio based on only its id in the `audio` object.
-export function playAudio(id, volume = 1) {
-  playAudioFromBuffer(audio[id], volume);
+export function playAudio(id, type, volume = 1) {
+  playAudioFromBuffer(audio[id], type, volume);
 }
 export function playBGM(id, loopStart, loopEnd, startTime = 0) {
+  while (startTime > loopEnd) {
+    startTime -= loopEnd - loopStart;
+  }
   playBGMFromBuffer(audio[id], loopStart, loopEnd, startTime);
   activeBGMProperties.loopStart = loopStart;
   activeBGMProperties.loopEnd = loopEnd;
@@ -72,10 +82,10 @@ export function stopBGM() {
   }
 }
 const singleAudioObject = {};
-export function playSingleAudio(id, label, volume = 1) { // If multiple objects may cause the same audio to be played many times in one frame, pass them here, and only the first instance of a label that gets passed in a given frame will play audio.
+export function playSingleAudio(id, type, label, volume = 1) { // If multiple objects may cause the same audio to be played many times in one frame, pass them here, and only the first instance of a label that gets passed in a given frame will play audio.
   if (singleAudioObject[label] === undefined) {
     singleAudioObject[label] = true;
-    playAudio(id, volume);
+    playAudio(id, type, volume);
   }
 }
 // Preloads all required audio.
