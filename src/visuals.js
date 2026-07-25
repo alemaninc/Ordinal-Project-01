@@ -1,12 +1,12 @@
 import { Bosses, currentDialogueId, dialogueList, dialoguePortraitVisibilities } from "./boss_data.js";
-import { bullets, enemies, fps, canvasContext, graze, lives, playerBullets, playerHitboxRadius, playerPosition, pointValue, power, score, items, frame, bombs, lastBomb, playerBombAngles, playerBombRange, maxBombDeflection, playerBombGuaranteedRange, angleToPlayer, currentBoss, isInCutscene, canGetSpellCard, spellCardBonus, scoreForNextBonus, collectedScoreBonuses, lastMiss } from "./game.js";
+import { bullets, enemies, fps, canvasContext, graze, lives, playerBullets, playerHitboxRadius, playerPosition, pointValue, power, score, items, frame, bombs, lastBomb, playerBombAngles, playerBombRange, maxBombDeflection, playerBombGuaranteedRange, angleToPlayer, currentBoss, isInCutscene, canGetSpellCard, spellCardBonus, scoreForNextBonus, collectedScoreBonuses, lastMiss, lastContinue, particles } from "./game.js";
 import { activeKeys } from "./menu.js";
 import { virtueProgressMultiplier } from "./persistent_data.js";
 import { addVectors, clampNumber, formatInteger, layeredLinearGradient, multiplyVectors, numberIsBounded, polarToCartesian, predictableRandom, rotateVector } from "./utility.js";
 
 const images = {};
 // Lists all the image files which must be loaded by their file name (excluding the file ending if it is "png").
-export const requiredImages = ["enemy_amberorb", "enemy_ambershard1", "enemy_ambershard2", "enemy_eye", "enemy_magmaelemental", "enemy_memoryshard1", "enemy_memoryshard2", "enemy_ufo_i1", "enemy_ufo_i2", "enemy_ufo_l1", "enemy_ufo_l2", "enemy_ufo_o1", "enemy_ufo_o2", "enemy_ufo_t1", "enemy_ufo_t2", "enemy_ufo_z1", "enemy_ufo_z2", "enemy_witch", "item_bombpiece", "item_extend", "item_fullpower", "item_lifepiece", "item_point", "item_power", "item_spellcard", "lexan", "lexan2", "luigin_front", "luigin_front_invincible", "luigin", "stagebg1", "stagebg2.jpg", "stagebg3.jpg", "zenryaku"];
+export const requiredImages = ["enemy_amberorb", "enemy_ambershard1", "enemy_ambershard2", "enemy_eye", "enemy_magmaelemental", "enemy_memoryshard1", "enemy_memoryshard2", "enemy_ufo_i1", "enemy_ufo_i2", "enemy_ufo_l1", "enemy_ufo_l2", "enemy_ufo_o1", "enemy_ufo_o2", "enemy_ufo_t1", "enemy_ufo_t2", "enemy_ufo_z1", "enemy_ufo_z2", "enemy_witch", "item_bombpiece", "item_extend", "item_fullpower", "item_lifepiece", "item_point", "item_power", "item_spellcard", "lexan", "lexan2", "luigin_front", "luigin_front_invincible", "luigin_front_miss", "luigin", "stagebg1", "stagebg2.jpg", "stagebg3.jpg", "zenryaku"];
 // We store this to be able to calculate how many files have been loaded for the loading screen.
 export var imageFilesLoaded = 0;
 // Retrieves an image and increments `imageFilesLoaded` once it is available.
@@ -47,7 +47,10 @@ export function drawImage(id, centreX, centreY, angle = 0, zoom = 1, reflect = f
 	canvasContext.restore();
 }
 // Draws a circle with a smooth outline, which may or may not include internal filling. Mainly used for bullets.
-function drawCircle(position, radius, outerColor, innerColor = "#00000000", numberOfStrokes = (radius < 5) ? 1 : (1 + Math.ceil(radius / 10))) {
+export function drawCircle(position, radius, outerColor, innerColor = "#00000000", numberOfStrokes = (radius < 5) ? 1 : (1 + Math.ceil(radius / 10))) {
+	if (outerColor === undefined) {
+		console.log(position);
+	}
 	canvasContext.beginPath();
 	canvasContext.arc(position[0] + 250, position[1] + 300, radius, 0, Math.PI * 2, true);
 	canvasContext.fillStyle = innerColor;
@@ -60,9 +63,19 @@ function drawCircle(position, radius, outerColor, innerColor = "#00000000", numb
 	}
 }
 // Converts the 4-argument `drawCircle` into a function that only takes one argument (`position`) as is required for the render function loop.
-export function circularRenderFunction(radius, outerColor, innerColor = "#00000000", numberOfStrokes = (radius < 5) ? 1 : (1 + Math.ceil(radius / 10))) {
+export function circularRenderFunction(radius, outerColor, innerColor = "#00000000", numberOfStrokes = (radius < 5) ? 1 : (1 + Math.ceil(radius / 10)), startAnimation = true) {
 	return function(position) {
-		drawCircle(position, radius, outerColor, innerColor, numberOfStrokes);
+		let time = frame - (this?.creationTime ?? 0); // If `creationTime` is undefined, spawn fully rendered.
+		let fullRenderTime = Math.max(14, radius * 0.6);
+		if ((time < fullRenderTime) && startAnimation) {
+			let maxOuterOpacity = (outerColor.length === 7) ? 255 : parseInt(outerColor.substring(7, 9), 16);
+			let maxInnerOpacity = (innerColor.length === 7) ? 255 : parseInt(innerColor.substring(7, 9), 16);
+			let outerOpacity = Math.ceil(maxOuterOpacity * time / fullRenderTime);
+			let innerOpacity = Math.ceil(maxInnerOpacity * time / fullRenderTime);
+			drawCircle(position, radius * (2 - time / fullRenderTime), outerColor.substring(0, 7) + outerOpacity.toString(16).padStart(2, "0"), innerColor.substring(0, 7) + innerOpacity.toString(16).padStart(2, "0"), numberOfStrokes);
+		} else { // Bypass unnecessary computations
+			drawCircle(position, radius, outerColor, innerColor, numberOfStrokes);
+		}
 	}
 }
 // Draws a rectangle on the canvas, at `zoom`x scale, centred at (`centreX`, `centreY`) and rotated `angle` radians clockwise.
@@ -82,24 +95,38 @@ export function drawRectangle(position, height, width, outerColor, innerColor = 
 	canvasContext.restore();
 }
 // Converts the 6-argument `drawRectangle` into a function that only takes one argument of `position`.
-export function rectangularRenderFunction(height, width, outerColor, innerColor = "#00000000", angle = 0) {
+export function rectangularRenderFunction(height, width, outerColor, innerColor = "#00000000", angle = 0, startAnimation = true) {
 	return function(position) {
-		drawRectangle(position, height, width, innerColor, outerColor, angle);
+		let time = frame - (this?.creationTime ?? 0); // If `creationTime` is undefined, spawn fully rendered.
+		let fullRenderTime = Math.max(14, height * 0.6 , width * 0.6);
+		if ((time < fullRenderTime) && startAnimation) {
+			let maxOuterOpacity = (outerColor.length === 7) ? 255 : parseInt(outerColor.substring(7, 9), 16);
+			let maxInnerOpacity = (innerColor.length === 7) ? 255 : parseInt(innerColor.substring(7, 9), 16);
+			let outerOpacity = Math.ceil(maxOuterOpacity * time / fullRenderTime);
+			let innerOpacity = Math.ceil(maxInnerOpacity * time / fullRenderTime);
+			drawRectangle(position, height * (2 - time / fullRenderTime), width * (2 - time / fullRenderTime), outerColor.substring(0, 7) + outerOpacity.toString(16).padStart(2, "0"), innerColor.substring(0, 7) + innerOpacity.toString(16).padStart(2, "0"), angle);
+		} else { // Bypass unnecessary computations
+			drawRectangle(position, height, width, innerColor, outerColor, angle);
+		}
 	}
 }
 // Renders an arrow bullet.
-export function arrowBulletRenderFunction(color, radius, angle) {
-	let lines = [
-		[[-0.25, 1.25], [1.25, 0], [-0.25, -1.25]],
-		[[-0.75, 0.75], [0.25, 0], [-0.75, -0.75]]
-	];
-	for (let lineNum = 0; lineNum < lines.length; lineNum++) {
-		for (let vectorNum = 0; vectorNum < lines[lineNum].length; vectorNum++) {
-			lines[lineNum][vectorNum] = multiplyVectors(lines[lineNum][vectorNum], radius);
-		}
-	}
+export function arrowBulletRenderFunction(color, radius, angle, startAnimation = true) {
 	return function(position) {
-		canvasContext.strokeStyle = color;
+		let fullRenderTime = Math.max(14, radius * 0.6);
+		let time = startAnimation ? (frame - (this?.creationTime ?? 0)) : fullRenderTime; // If `creationTime` is undefined, spawn fully rendered.
+		let radiusMult = (time < fullRenderTime) ? (2 - time / fullRenderTime) : 1;
+		let lines = [
+			[[-0.25, 1.25], [1.25, 0], [-0.25, -1.25]],
+			[[-0.75, 0.75], [0.25, 0], [-0.75, -0.75]]
+		];
+		for (let lineNum = 0; lineNum < lines.length; lineNum++) {
+			for (let vectorNum = 0; vectorNum < lines[lineNum].length; vectorNum++) {
+				lines[lineNum][vectorNum] = multiplyVectors(lines[lineNum][vectorNum], radius * radiusMult);
+			}
+		}
+		let opacity = (color.length === 7) ? 255 : parseInt(color.substring(7, 9), 16)
+		canvasContext.strokeStyle = color.substring(0, 7) + Math.ceil(opacity * Math.min(time / fullRenderTime, 1)).toString(16).padStart(2, "0");
 		canvasContext.lineWidth = Math.max(radius / 20 + 1, radius / 10);
 		for (let lineNum = 0; lineNum < lines.length; lineNum++) {
 			canvasContext.beginPath();
@@ -227,12 +254,10 @@ export function drawCanvas() {
 	2. Player
 	3. Enemies
 	4. Player's bomb ("Alpha Scattering")
-	5. Items
-	6. Player bullets
-	7. Enemy bullets
-
-	Known relations:
-	Player < Enemies < Bomb < Items < Bullets
+	5. Particles
+	6. Items
+	7. Player bullets
+	8. Enemy bullets
 	*/
 	// First, clear the canvas.
 	canvasContext.clearRect(0, 0, 500, 600);
@@ -281,8 +306,12 @@ export function drawCanvas() {
 		document.getElementById("canvasBackground").style.backgroundPosition = backgroundData.position;
 		document.getElementById("canvasBackground").style.transform = ((currentBoss.bossId === "zenryaku") && currentBoss.isInSpellCard && (currentBoss.currentAttackTime > 25)) ? ("rotate(" + ((frame / 2) % 360) + "deg)") : "";
 	}
+	if (numberIsBounded(0, frame - lastMiss, 25) && (lives >= 3)) { // Draw a red circle around the player during the death animation, unless this is the last life (in which case the continue menu appears).
+		let animationProgress = frame - lastMiss;
+		drawCircle(playerPosition, animationProgress * 28, "#00000000", "#ff0000" + (125 - animationProgress * 5).toString(16).padStart(2, "0"))
+	}
 	// 2. Draw the player
-	drawImage("luigin_front" + (((frame - lastMiss) > 100) && (frame - lastBomb > 350) ? "" : "_invincible"), playerPosition[0], playerPosition[1] + 10, (activeKeys.arrowright ? 0.15 : 0) - (activeKeys.arrowleft ? 0.15 : 0));
+	drawImage("luigin_front" + (((frame - lastMiss > 125) && (frame - lastBomb > 350)) ? "" : ((frame - lastMiss > 25) || (frame - lastContinue < 25)) ? "_invincible" : "_miss"), playerPosition[0], playerPosition[1] + 10, (activeKeys.arrowright ? 0.15 : 0) - (activeKeys.arrowleft ? 0.15 : 0));
 	if (activeKeys.shift) { // show hitbox if focused
 		let playerHitboxRenderFunction = circularRenderFunction(playerHitboxRadius, "#990000");
 		playerHitboxRenderFunction(playerPosition);
@@ -306,14 +335,20 @@ export function drawCanvas() {
 		let guaranteedBombRange = playerBombGuaranteedRange();
 		drawCircle(playerPosition, guaranteedBombRange, "#ffff00", "#ffff00");
 	}
-	// 5. Draw items on the screen.
+	// 5. Draw particles on the screen.
+	let particleIds = Object.keys(particles);
+	for (let id of particleIds) {
+		let position = particles[id].position;
+		particles[id].renderFunction(position);
+	}
+	// 6. Draw items on the screen.
 	let itemIds = Object.keys(items);
 	for (let id of itemIds) {
 		try {
 			drawImage("item_" + items[id].type, items[id].position[0], items[id].position[1]);
 		} catch {}
 	}
-	// 6. Draw player and enemy bullets on the screen.
+	// 7. Draw player and enemy bullets on the screen.
 	let playerBulletIds = Object.keys(playerBullets);
 	for (let id of playerBulletIds) {
 		let position = playerBullets[id].position;
@@ -427,11 +462,13 @@ export function drawCanvas() {
 	}
 	// Finally, update the sidebar.
 	document.getElementById("sidebar_score").innerText = formatInteger(Math.min(score, 999999999));
-	document.getElementById("sidebar_bonusScore").innerText = formatInteger(Math.min(scoreForNextBonus(), 999999999));
+	document.getElementById("sidebar_bonusScore").innerText = formatInteger(Bosses.lexan.isDefeated ? 999999999 : Math.min(scoreForNextBonus(), 999999999));
 	document.getElementById("sidebar_bonusType").innerText = (collectedScoreBonuses % 15 === 14) ? "(Extend)" : (collectedScoreBonuses % 5 === 4) ? "(Spell Card)" : (collectedScoreBonuses % 3 === 2) ? "(Life Piece)" : "(Bomb Piece)";
 	document.getElementById("sidebar_bonusType").style.color = (collectedScoreBonuses % 15 === 14) ? "#cc66cc" : (collectedScoreBonuses % 5 === 4) ? "#66cc66" : (collectedScoreBonuses % 3 === 2) ? "#e6b3e6" : "#b3e6b3";
-	document.getElementById("sidebar_lives").innerHTML = "<span style=\"color: #cc66cc;\">" + "♥".repeat(Math.floor(lives / 3)) + "</span>" + ((lives % 3 === 0) ? "" : "<span style=\"background:conic-gradient(#cc66cc 0%, #cc66cc " + ((lives % 3) * 100 / 3) + "%, #333333 " + ((lives % 3) * 100 / 3) + "%, #333333); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;\">♥</span>") + "<span style=\"color: #333333;\">" + "♥".repeat(Math.floor(8 - lives / 3)) + "</span>";
-	document.getElementById("sidebar_bombs").innerHTML = "<span style=\"color: #66cc66;\">" + "★".repeat(Math.floor(bombs / 3)) + "</span>" + ((bombs % 3 === 0) ? "" : "<span style=\"background:conic-gradient(#66cc66 0%, #66cc66 " + ((bombs % 3) * 100 / 3) + "%, #333333 " + ((bombs % 3) * 100 / 3) + "%, #333333); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;\">★</span>") + "<span style=\"color: #333333;\">" + "★".repeat(Math.floor(8 - bombs / 3)) + "</span>";
+	document.getElementById("sidebar_lives").innerHTML = (lives > 24) ? ("♥ × " + Math.floor(lives / 3)) : ("<span style=\"color: #cc66cc;\">" + "♥".repeat(Math.floor(lives / 3)) + "</span>" + ((lives % 3 === 0) ? "" : "<span style=\"background:conic-gradient(#cc66cc 0%, #cc66cc " + ((lives % 3) * 100 / 3) + "%, #333333 " + ((lives % 3) * 100 / 3) + "%, #333333); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;\">♥</span>") + "<span style=\"color: #333333;\">" + "♥".repeat(Math.floor(8 - lives / 3)) + "</span>");
+	document.getElementById("sidebar_lifePieces").innerHTML = (lives % 3) + " / 3";
+	document.getElementById("sidebar_bombs").innerHTML = (bombs > 24) ? ("★ × " + Math.floor(bombs / 3)) : ("<span style=\"color: #66cc66;\">" + "★".repeat(Math.floor(bombs / 3)) + "</span>" + ((bombs % 3 === 0) ? "" : "<span style=\"background:conic-gradient(#66cc66 0%, #66cc66 " + ((bombs % 3) * 100 / 3) + "%, #333333 " + ((bombs % 3) * 100 / 3) + "%, #333333); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;\">★</span>") + "<span style=\"color: #333333;\">" + "★".repeat(Math.floor(8 - bombs / 3)) + "</span>");
+	document.getElementById("sidebar_bombPieces").innerHTML = (bombs % 3) + " / 3";
 	document.getElementById("sidebar_power").innerText = (power / 100).toFixed(2) + " / 4.00";
 	document.getElementById("sidebar_value").innerText = formatInteger(pointValue);
 	document.getElementById("sidebar_graze").innerText = formatInteger(graze);

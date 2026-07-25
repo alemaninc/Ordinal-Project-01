@@ -22,7 +22,6 @@ function playAudioFromBuffer(buffer, type, volume = 1) {
   source.buffer = buffer;
   let gainNode = audioContext.createGain();
   gainNode.gain.value = volume * persistentData.settings.volume.masterVolume * (persistentData.settings.volume[type] ?? 1);
-  console.log(gainNode.gain.value);
   gainNode.connect(audioContext.destination);
   source.connect(gainNode);
   source.start();

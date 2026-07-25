@@ -1,11 +1,11 @@
-import { pauseBGM, playAudio, playBGM, playSingleAudio, stopBGM, unpauseBGM } from "./audio.js";
+import { activeBGMProperties, pauseBGM, playAudio, playBGM, playSingleAudio, stopBGM, unpauseBGM } from "./audio.js";
 import { advanceDialogue, Bosses, clearCurrentDialogue, currentDialogueId, currentDialogueOpenTime, dialogueList } from "./boss_data.js";
 import { hsltohex } from "./color_converter.js";
 import { activeKeys, openMainMenu, openMenuWindow } from "./menu.js";
-import { persistentData, processVirtueGain, savePersistentData, updateRecord, updateUpgradeEffectValues, upgradeEffectValues } from "./persistent_data.js";
-import { clearExtraStageEvents, extraStageEvents, scheduleStageEvent, scheduleUnclearableStageEvent, stageEvents, unclearableExtraStageEvents } from "./stage_events.js";
-import { addVectors, angleDifference, bezierCurve, formatDecimal, formatInteger, modulo, multiplyVectors, polarToCartesian, shuffleArray, squaredDistance } from "./utility.js";
-import { circularRenderFunction, drawCanvas } from "./visuals.js";
+import { checkUpgradeless, persistentData, processVirtueGain, savePersistentData, updateRecord, updateUpgradeEffectValues, upgradeEffectValues } from "./persistent_data.js";
+import { clearExtraStageEvents, extraStageEvents, resetStageData, scheduleStageEvent, scheduleUnclearableStageEvent, stageEvents, unclearableExtraStageEvents } from "./stage_events.js";
+import { addVectors, angleDifference, bezierCurve, formatDecimal, formatInteger, modulo, multiplyVectors, numberIsBounded, polarToCartesian, randomPolarVector, shuffleArray, squaredDistance } from "./utility.js";
+import { circularRenderFunction, drawCanvas, drawCircle } from "./visuals.js";
 
 // Difficulty is 0, 1, 2 or 3 for easy, normal, hard or lunatic respectively.
 export var difficulty;
@@ -20,6 +20,8 @@ export var gameIsPaused = false;
 export var gameOverScreenActive = false;
 // The number of continues left.
 export var continuesLeft = 3;
+// The number of point items collected.
+var pointItemsCollected = 0;
 // All properties stored in the sidebar. We will assign their values upon starting a game.
 export var score, lives, bombs, power, pointValue, graze, fps;
 // Begins the game.
@@ -28,7 +30,7 @@ export function startGame(difficultySetting) {
 	let difficultyName = ["Easy", "Normal", "Hard", "Lunatic"][difficultySetting];
 	document.getElementById("sidebar_difficulty").innerText = difficultyName;
 	document.getElementById("sidebar_difficulty").style.color = "var(--" + difficultyName.toLowerCase() + ")";
-	document.getElementById("sidebar_hiscore").innerText = formatInteger(Math.min(persistentData[(Object.values(persistentData.upgrades).reduce((x, y) => x + y) === 0) ? "upgradelessRecords" : "records"].highScore[difficultySetting], 999999999));
+	document.getElementById("sidebar_hiscore").innerText = formatInteger(Math.min(persistentData[checkUpgradeless() ? "upgradelessRecords" : "records"].highScore[difficultySetting], 999999999));
 	updateUpgradeEffectValues();
 	continuesLeft = 3;
 	// Initializes sidebar variables.
@@ -39,20 +41,27 @@ export function startGame(difficultySetting) {
 	pointValue = 10000;
 	graze = 0;
 	fps = 50;
+	totalSpellCardsSeen = 0;
 	totalSpellCardsCaptured = 0;
-	// Update the sidebar for the first time.
-	drawCanvas();
 	openMenuWindow("game");
 	difficulty = difficultySetting;
 	frame = 0;
 	lastMiss = -999;
 	lastBomb = -999;
+	lastContinue = -999;
+	pointItemsCollected = 0;
 	collectedScoreBonuses = 0;
 	stopBGM(); // "An Addendum to the Past" only starts playing 2 seconds in.
 	document.getElementById("div_autocollectionLineIndicator").style.top = (15 + upgradeEffectValues.lowerAutocollect) + "px";
 	lastTick = Date.now();
 	requiredFrames = 0;
 	gameClockId = setInterval(gameClock, 10);
+	// Clears all the stage data in case this is a replay.
+	resetStageData();
+	playerPosition[0] = 0;
+	playerPosition[1] = 250;
+	// Update the sidebar for the first time.
+	drawCanvas();
 }
 // Clears the current game data.
 export function endGame(overrideScreenChange) {
@@ -72,13 +81,20 @@ export function endGame(overrideScreenChange) {
 		}
 	}
 	updateRecord("spellCardsCaptured", totalSpellCardsCaptured, "max");
+	for (let i = 0; i <= difficulty; i++) {
+		persistentData.spellCardsSeen[i] = Math.max(persistentData.spellCardsSeen[i], totalSpellCardsSeen);
+	}
 	savePersistentData();
 	clearScreen(false);
 	for (let itemId of Object.keys(items)) {
 		delete items[itemId];
 	}
+	for (let particleId of Object.keys(particles)) {
+		delete particles[particleId];
+	}
 	clearExtraStageEvents(true);
 	clearInterval(gameClockId);
+	gameClockId = undefined;
 	isInCutscene = false;
 	currentBoss.bossId = undefined;
 	clearCurrentDialogue();
@@ -89,6 +105,7 @@ export function endGame(overrideScreenChange) {
 	document.getElementById("window_gameOver").style.display = "none";
 	document.getElementById("div_bossSpellCard").style.opacity = 0;
 	document.getElementById("div_bossSpellCard").innerText = "";
+	document.getElementById("div_stageClearBonus").style.opacity = 0;
 	if (!overrideScreenChange) {
 		stopBGM();
 		openMenuWindow("virtueCalculation");
@@ -102,6 +119,7 @@ export var frame = 0;
 // The frame of the last death and last bomb.
 export var lastMiss = -999;
 export var lastBomb = -999;
+export var lastContinue = -999;
 // The number of score bonuses collected so far.
 export var collectedScoreBonuses = 0;
 // The score requirement for the next bonus.
@@ -196,24 +214,27 @@ const itemCollectionFunctions = {
 	},
 	point: function() {
 		score += pointValue;
+		pointItemsCollected++;
 	},
 	lifepiece: function() {
 		if (lives % 3 === 2) {
 			playAudio("se_extend", "PL");
 		}
-		lives = Math.min(lives + 1, 24);
+		lives++;
 	},
 	extend: function() {
-		if (lives < 24) {
-			playAudio("se_extend", "PL");
-		}
-		lives = Math.min(lives + 3, 24);
+		playAudio("se_extend", "PL");
+		lives += 3;
 	},
 	bombpiece: function() {
-		bombs = Math.min(bombs + 1, 24);
+		if (bombs % 3 === 2) {
+			playAudio("se_extend", "PL");
+		}
+		bombs++
 	},
 	spellcard: function() {
-		bombs = Math.min(bombs + 3, 24);
+		playAudio("se_cardget", "PL");
+		bombs += 3;
 	}
 };
 // A list of all the items currently present.
@@ -268,6 +289,16 @@ export function processEnemyDrops(enemyPosition, dropList) {
 			createItem(addVectors(enemyPosition, polarToCartesian(smallRingRadii[ringId], bearingToAngle(360 * (smallId + smallRingPhase) / smallRingSizes[ringId])), [Math.random() * 8 - 4, Math.random() * 8 - 4]), smallDrops[cumulativeSmallRingSizes[ringId] + smallId]);
 		}
 	}
+}
+// A list of all the particles currently present.
+export const particles = {};
+// The number of particles that have been spawned during the game.
+var particleCounter = 0;
+// Creates a particle, which has no collision checks at all and only exists for visual effects.
+export function createParticle(position, behaviourFunction, renderFunction, lifespan, extraProperties = {}) {
+	particles[particleCounter] = {position, behaviourFunction, renderFunction, lifespan, creationTime: frame, id: particleCounter};
+	Object.assign(particles[particleCounter], extraProperties);
+	particleCounter++;
 }
 // The game canvas, and its context.
 const gameCanvas = document.getElementById("gameCanvas");
@@ -327,6 +358,7 @@ export function useContinue() {
 	playerPosition[0] = 0;
 	playerPosition[1] = 250;
 	collectedScoreBonuses = 0;
+	lastContinue = frame;
 	openMenuWindow("game");
 	unpauseBGM();
 }
@@ -429,13 +461,14 @@ export function startBossPhase(currentPhaseId) { // `phaseId` is "Nn" for the nt
 		currentBoss.enemyId = enemyCounter;
 		// We apply a blank behaviour function and run the boss's actual behaviour function in the main loop.
 		createEnemy(position, function() {}, bossData.renderFunction, bossData.collisionCheckFunction, nextAttackData.isSurvival ? Number.MIN_VALUE : nextAttackData.HP);
-		enemies[currentBoss.enemyId].invincible = true; // Every boss is invincible for the first 2 seconds of each pattern. We set this to false within the game loop.
+		enemies[currentBoss.enemyId].damageModifier = nextAttackData.isSurvival ? 0 : 0.1; // Every boss has 90% damage reduction for the first 2 seconds of each phase. We set this to 0% within the game loop.
 		currentBoss.phase = Number(nextId.substring(1));
 		currentBoss.isInSpellCard = nextId[0] === "S";
 		currentBoss.currentAttackTime = 0;
 		document.getElementById("div_bossSpellCard").style.opacity = 0;
 		document.getElementById("div_bossSpellCard").innerText = "";
 		if (currentBoss.isInSpellCard) {
+			totalSpellCardsSeen++;
 			scheduleUnclearableStageEvent(25, function() { // Give potential previous spell card time to disappear.
 				playAudio("se_cat00", "EN");
 				document.getElementById("div_bossSpellCard").innerText = Bosses[currentBoss.bossId].attacks[nextId].name;
@@ -445,7 +478,8 @@ export function startBossPhase(currentPhaseId) { // `phaseId` is "Nn" for the nt
 		}
 	}
 }
-// The total number of spell cards captured in this game, out of 13.
+// The total number of spell cards seen and captured in this game, out of 13.
+var totalSpellCardsSeen = 0;
 var totalSpellCardsCaptured = 0;
 // Whether a spell card can be captured.
 export function canGetSpellCard() {
@@ -464,6 +498,29 @@ export function spellCardBonus() {
 		let proportion = (1 + 2 * Math.min(timeLeft / (maxTime - 250), 1)) / 3;
 		return 10 * Math.round(proportion * maxScore / 10); // Round to the nearest 10 points.
 	}
+}
+// Processes the stage clear bonus.
+export function stageClearBonus() {
+	let out = 1000;
+	document.getElementById("span_stageClearBonus_stage").innerText = 1000;
+	out += power * 5;
+	document.getElementById("span_stageClearBonus_power").innerText = power * 5;
+	out += graze * 5;
+	document.getElementById("span_stageClearBonus_graze").innerText = power * 5;
+	out *= pointItemsCollected;
+	document.getElementById("span_stageClearBonus_pointItems").innerText = "× " + pointItemsCollected;
+	out += Math.floor(lives / 3) * 1000000 + (lives % 3) * 250000;
+	document.getElementById("span_stageClearBonus_lives").innerText = Math.floor(lives / 3) * 1000000 + (lives % 3) * 250000;
+	out += Math.floor(bombs / 3) * 200000 + (bombs % 3) * 50000;
+	document.getElementById("span_stageClearBonus_bombs").innerText = Math.floor(bombs / 3) * 200000 + (bombs % 3) * 50000;
+	out *= [0.8, 1, 1.2, 1.5][difficulty];
+	document.getElementById("span_stageClearBonus_difficulty").innerText = "× " + [0.8, 1, 1.2, 1.5][difficulty].toFixed(1);
+	score += Math.round(out / 10) * 10;
+	document.getElementById("span_stageClearBonus_total").innerText = Math.round(out / 10) * 10;
+	document.getElementById("div_stageClearBonus").style.opacity = 1;
+	scheduleStageEvent(200, function() {
+		document.getElementById("div_stageClearBonus").style.opacity = 0;
+	});
 }
 // Removes all bullets and enemies, and autocollects all items at the start and end of a boss fight.
 export function clearScreen(autocollect) {
@@ -510,21 +567,23 @@ function processFrame() {
 	let bombRange = playerBombRange();
 	let guaranteedBombRange = playerBombGuaranteedRange();
 	// Determine the player speed, and adjust the player's position.
-	let speed = (activeKeys.shift || bombActive) ? (2.4 * upgradeEffectValues.speedDown) : (7.2 * upgradeEffectValues.speedUp);
-	if (activeKeys.arrowleft) {
-		playerPosition[0] -= speed;
+	if ((!numberIsBounded(5, frame - lastMiss, 25)) || bombActive || (frame - lastContinue < 25)) { // Keep player stationary during death animation, unless the player either death-bombed or continued.
+		let speed = (activeKeys.shift || bombActive) ? (2.4 * upgradeEffectValues.speedDown) : (7.2 * upgradeEffectValues.speedUp);
+		if (activeKeys.arrowleft) {
+			playerPosition[0] -= speed;
+		}
+		if (activeKeys.arrowright) {
+			playerPosition[0] += speed;
+		}
+		playerPosition[0] = Math.max(-244, Math.min(playerPosition[0], 244)); // 5 pixels less than screen size to prevent hitbox being halfway out.
+		if (activeKeys.arrowup) {
+			playerPosition[1] -= speed;
+		}
+		if (activeKeys.arrowdown) {
+			playerPosition[1] += speed;
+		}
+		playerPosition[1] = Math.max(-294, Math.min(playerPosition[1], 294));
 	}
-	if (activeKeys.arrowright) {
-		playerPosition[0] += speed;
-	}
-	playerPosition[0] = Math.max(-244, Math.min(playerPosition[0], 244)); // 5 pixels less than screen size to prevent hitbox being halfway out.
-	if (activeKeys.arrowup) {
-		playerPosition[1] -= speed;
-	}
-	if (activeKeys.arrowdown) {
-		playerPosition[1] += speed;
-	}
-	playerPosition[1] = Math.max(-294, Math.min(playerPosition[1], 294));
 	if (currentBoss.bossId !== undefined) {
 		enemies[currentBoss.enemyId].position = addVectors(multiplyVectors(enemies[currentBoss.enemyId].position, 0.95), multiplyVectors(currentBoss.targetPosition, 0.05));
 		let attackTimeLeft = Bosses[currentBoss.bossId].attacks[(currentBoss.isInSpellCard ? "S" : "N") + currentBoss.phase].maxFrames - currentBoss.currentAttackTime;
@@ -542,8 +601,8 @@ function processFrame() {
 			let bossData = Bosses[currentBoss.bossId];
 			let attackData = bossData.attacks[phaseId];
 			currentBoss.currentAttackTime++;
-			if ((currentBoss.currentAttackTime === 100) && (!attackData.isSurvival)) { // Every boss is invincible for the first 2 seconds of each attack.
-				enemies[currentBoss.enemyId].invincible = false;
+			if ((currentBoss.currentAttackTime === 100) && (!attackData.isSurvival)) { // Every boss has 10% damage reduction for the first 2 seconds of each attack.
+				enemies[currentBoss.enemyId].damageModifier = 1;
 			}
 			let potentialCapture = true;
 			if (currentBoss.currentAttackTime === attackData.maxFrames) { // If the attack is timed out.
@@ -558,7 +617,7 @@ function processFrame() {
 					attackData.slowDefeat = false;
 					finalSpellSlowdown = true;
 					enemyData.HP = 1;
-					enemyData.invincible = true;
+					enemyData.damageModifier = 0;
 					scheduleStageEvent(16, function() { // 1.6 seconds while slowed down.
 						enemyData.HP = 0;
 						finalSpellSlowdown = false;
@@ -593,9 +652,7 @@ function processFrame() {
 		}
 		let enemyIds = Object.keys(enemies);
 		enemyLoop: for (let id of enemyIds) {
-			if (!enemies[id].invincible) {
-				enemies[id].HP -= positionCoveredByBomb(enemies[id].position, bombAngles, bombRange, guaranteedBombRange) * upgradeEffectValues.bombStrength; // If bomb is inactive, this always returns 0.
-			}
+			enemies[id].HP -= positionCoveredByBomb(enemies[id].position, bombAngles, bombRange, guaranteedBombRange) * upgradeEffectValues.bombStrength * (enemies[id].damageModifier ?? 1); // If bomb is inactive, this always returns 0.
 			if ((currentBoss.bossId === undefined) || (id != currentBoss.enemyId)) { // Boss behaviour gets run separately, except for collisions.
 				if (enemies[id].HP <= 0) {
 					playAudio("se_enep00", "EN", 0.25);
@@ -620,11 +677,14 @@ function processFrame() {
 			for (let id2 of Object.keys(playerBullets)) {
 				let bulletCollisionValue = enemies[id].collisionCheckFunction(enemies[id].position, playerBullets[id2].position);
 				if (bulletCollisionValue === 2) {
-					if (!enemies[id].invincible) {
-						enemies[id].HP -= playerBullets[id2].damage;
-					}
+					enemies[id].HP -= playerBullets[id2].damage * (enemies[id].damageModifier ?? 1);
 					score += 10;
-					playSingleAudio("se_damage00", "PL", "enemydamage" + frame, 0.1);
+					playSingleAudio("se_damage00", "PL", "enemydamage" + frame, 0.2);
+					// Creates particles when damage is dealt.
+					createParticle(addVectors(playerBullets[id2].position, randomPolarVector(0, 4)), function() {}, function(position) {
+						let time = frame - this.creationTime;
+						drawCircle(position, 4 + time * 0.5, "#ffffff" + Math.max(128 - time * 8, 0).toString(16).padStart(2, "0"), "#00000000");
+					}, 16); // `0` means no collisions.
 					delete playerBullets[id2];
 				}
 			}
@@ -634,7 +694,7 @@ function processFrame() {
 			if (bullets[id] === undefined) { // Bullets may get deleted midway through this loop, e.g. by Lexan's electric poles or black hole.
 				continue bulletLoop;
 			}
-			if (((frame - lastMiss) <= 25) && (!bullets[id].indestructible)) { // If less than 0.5 seconds have passed since a miss, delete all bullets.
+			if (((frame - lastMiss) <= 50) && (!bullets[id].indestructible)) { // If less than 0.5 seconds have passed since a miss, delete all bullets.
 				delete bullets[id];
 				continue bulletLoop;
 			}
@@ -675,7 +735,7 @@ function processFrame() {
 		pointValue += grazesThisFrame * 50;
 		// If there was a collision between a player and a bullet or enemy, add a miss.
 		// If no bomb happens in the next 0.1s, remove a life and reset enemy bullets and the player's position, otherwise add graze.
-		if (collisionThisFrame && ((frame - lastMiss) > 100) && (frame - lastBomb > 350)) { // Misses must be at least 2s apart, and cannot happen during a bomb or within 1s of after a bomb.
+		if (collisionThisFrame && ((frame - lastMiss) > 125) && (frame - lastBomb > 350)) { // Misses must be at least 2s apart, and cannot happen during a bomb or within 1s of after a bomb.
 			playAudio("se_pldead00", "PL");
 			lastMiss = frame;
 		}
@@ -687,28 +747,44 @@ function processFrame() {
 				pauseBGM();
 				gameOverScreenActive = true;
 			} else {
-				let lostPower = Math.floor(Math.min(power - 100, power * 0.1));
-				power -= lostPower;
-				for (let i = 0; i < Math.min(lostPower, 7); i++) {
-					createItem(addVectors(playerPosition, polarToCartesian(90, bearingToAngle(-30 + i * 10))), "power");
-				}
-				lives -= 3;
-				bombs = Math.max(bombs, upgradeEffectValues.startingBombs); // Replenishes bombs to 2 full bombs (possibly more with upgrades).
-				for (let id of Object.keys(bullets)) {
-					if (!bullets[id].indestructible) {
-						delete bullets[id];
+				scheduleStageEvent(20, function() {
+					let lostPower = Math.floor(Math.min(power - 100, power * 0.1));
+					power -= lostPower;
+					for (let i = 0; i < Math.min(lostPower, 7); i++) {
+						createItem(addVectors(playerPosition, polarToCartesian(90, bearingToAngle(-30 + i * 10))), "power");
 					}
-				}
-				playerPosition = [0, 250];
+					lives -= 3;
+					bombs = Math.max(bombs, upgradeEffectValues.startingBombs); // Replenishes bombs to 2 full bombs (possibly more with upgrades).
+					for (let id of Object.keys(bullets)) {
+						if (!bullets[id].indestructible) {
+							delete bullets[id];
+						}
+					}
+					playerPosition = [0, 250];
+				});
 			}
 		}
 	}
-	// Process any bonus before dealing with the motion of items.
-	if (score >= scoreForNextBonus()) { // Run this in an if rather than a while to prevent audio spam if multiple bonuses are obtained at once (e.g. when Lexan's 9th is captured)
-		playAudio("se_bonus", "PL");
+	let particleIds = Object.keys(particles);	
+	particleLoop: for (let id of particleIds) {
+		if (particles[id] === undefined) { // Particles shouldn't get deleted mid-loop but stay safe.
+			continue particleLoop;
+		}
+		let time = frame - particles[id].creationTime;
+		if (time === particles[id].lifespan) {
+			delete particles[id];
+		} else {
+			particles[id].behaviourFunction(frame - particles[id].creationTime);
+		}
 	}
-	while (score >= scoreForNextBonus()) {
-		processScoreBonus();
+	// Process any bonus before dealing with the motion of items.
+	if (!Bosses.lexan.isDefeated) {
+		if (score >= scoreForNextBonus()) { // Run this in an if rather than a while to prevent audio spam if multiple bonuses are obtained at once (e.g. when Lexan's 9th is captured)
+			playAudio("se_bonus", "PL");
+		}
+		while (score >= scoreForNextBonus()) {
+			processScoreBonus();
+		}
 	}
 	// Process the motion of items, and collect any items within the collection radius.
 	let itemIds = Object.keys(items);

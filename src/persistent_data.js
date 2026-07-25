@@ -18,7 +18,7 @@ function upgradeValueCoefficient(lv) {
 const upgradeList = {
 	autoShoot: {
 		name: "Auto Fire",
-		description: lv => "Automatically shoots bullets without needing to hold Z.",
+		description: lv => "Automatically shoots bullets without needing to hold Z.<br>This upgrade does not prevent improving upgradeless records.",
 		effectValue: lv => lv === 1,
 		cost: lv => 5000000,
 		maxLevel: 1
@@ -99,7 +99,7 @@ const upgradeList = {
 	},
 	prestige: {
 		name: "Prestige",
-		description: lv => "Virtue gain is increased by " + formatDecimal(upgradeValueCoefficient(lv) * 10, 3) + "%.",
+		description: lv => "Virtue gain is increased by " + formatDecimal(upgradeValueCoefficient(lv) * 10, 3) + "%.<br>Using this upgrade does not prevent increasing upgradeless records.",
 		effectValue: lv => 1 + upgradeValueCoefficient(lv) / 10,
 		cost: lv => 100000000 * (lv + 1) * (lv + 1),
 		maxLevel: 100
@@ -108,6 +108,7 @@ const upgradeList = {
 const upgradeArray = Object.keys(upgradeList);
 export const persistentData = {
 	virtue: 0,
+	spellCardsSeen: [0, 0, 0, 0], // For each difficulty
 	records: { // For each difficulty
 		highScore: [0, 0, 0, 0],
 		maxSpareContinues: [-1, -1, -1, -1], // -1 indicates not cleared.
@@ -177,7 +178,7 @@ export function updateUpgradeInterface() {
 	for (let upgradeNum = 0; upgradeNum < upgradeArray.length; upgradeNum++) {
 		document.getElementById("span_upgrade" + upgradeNum + "Level").innerText = "Lv. " + persistentData.upgrades[upgradeArray[upgradeNum]];
 	}
-	let upgradeButtons = Array.from(document.querySelectorAll("[data-menuWindow='" + activeWindow + "']"));
+	let upgradeButtons = Array.from(document.querySelectorAll("[data-menuWindow='upgrades']"));
 	let selectedUpgradeNum = upgradeButtons.map(x => x.classList.contains("active")).indexOf(true);
 	if (selectedUpgradeNum === upgradeArray.length) { // If "Refund All Upgrades" is selected.
 		document.getElementById("span_upgrades_selectedUpgradeName").innerText = "";
@@ -206,7 +207,7 @@ export function updateUpgradeInterface() {
 function formatPieceRecord(pieces, itemSingular, itemPlural) { // Converts a number of pieces to either "Not Cleared", a number of the item or a number of the item and pieces
 	return Math.floor(pieces / 3) + " " + (numberIsBounded(3, pieces, 5) ? itemSingular : itemPlural) + " (" + (pieces % 3) + " / 3)"
 }
-export function updateRecordInteface() {
+export function updaterecordInterface() {
 	for (let mode of ["records", "upgradelessRecords"]) {
 		for (let difficulty = 0; difficulty < 4; difficulty++) {
 			document.getElementById("tr_" + mode + "_highScore").children[difficulty + 1].innerText = formatInteger(persistentData[mode].highScore[difficulty]);
@@ -214,7 +215,25 @@ export function updateRecordInteface() {
 			let spareLives = persistentData[mode].maxSpareLives[difficulty];
 			let spareBombs = persistentData[mode].maxSpareBombs[difficulty];
 			let difficultyColor = "var(--" + ["easy", "normal", "hard", "lunatic"][difficulty] + ")";
-			document.getElementById("tr_" + mode + "_maxSpareItems").children[difficulty + 1].innerHTML = (spareContinues === -1) ? "Not Cleared" : (spareContinues !== 3) ? (spareContinues + " continue" + ((spareContinues === 1) ? "" : "s")) : ("♥".repeat(Math.floor(spareLives / 3)) + ((spareLives % 3 === 0) ? "" : "<span style=\"background:conic-gradient(" + difficultyColor + " 0%, " + difficultyColor + " " + ((spareLives % 3) * 100 / 3) + "%, transparent " + ((spareLives % 3) * 100 / 3) + "%, transparent); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;\">♥</span>") + "<span style=\"color: transparent;\">" + "♥".repeat(Math.floor(8 - spareLives / 3)) + "</span><br>" + "★".repeat(Math.floor(spareBombs / 3)) + ((spareBombs % 3 === 0) ? "" : "<span style=\"background:conic-gradient(" + difficultyColor + " 0%, " + difficultyColor + " " + ((spareBombs % 3) * 100 / 3) + "%, transparent " + ((spareBombs % 3) * 100 / 3) + "%, transparent); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;\">★</span>") + "<span style=\"color: transparent;\">" + "★".repeat(Math.floor(8 - spareBombs / 3)) + "</span>");
+			if (spareContinues === -1) {
+				document.getElementById("tr_" + mode + "_maxSpareItems").children[difficulty + 1].innerHTML = "Not Cleared";
+			} else if (spareContinues < 3) {
+				document.getElementById("tr_" + mode + "_maxSpareItems").children[difficulty + 1].innerHTML = spareContinues + " continue" + ((spareContinues === 1) ? "" : "s");
+			} else {
+				let text = "";
+				if (spareLives > 24) {
+					text += "♥ × " + Math.floor(spareLives / 3) + " (" + (spareLives % 3) + " / 3)";
+				} else {
+					text += "♥".repeat(Math.floor(spareLives / 3)) + ((spareLives % 3 === 0) ? "" : "<span style=\"background:conic-gradient(" + difficultyColor + " 0%, " + difficultyColor + " " + ((spareLives % 3) * 100 / 3) + "%, transparent " + ((spareLives % 3) * 100 / 3) + "%, transparent); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;\">♥</span>") + "<span style=\"color: transparent;\">" + "♥".repeat(Math.floor(8 - spareLives / 3)) + "</span>"
+				}
+				text += "<br>";
+				if (spareBombs > 24) {
+					text += "★ × " + Math.floor(spareBombs / 3) + " (" + (spareBombs % 3) + " / 3)";
+				} else {
+					text += "★".repeat(Math.floor(spareBombs / 3)) + ((spareBombs % 3 === 0) ? "" : "<span style=\"background:conic-gradient(" + difficultyColor + " 0%, " + difficultyColor + " " + ((spareBombs % 3) * 100 / 3) + "%, transparent " + ((spareBombs % 3) * 100 / 3) + "%, transparent); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;\">★</span>") + "<span style=\"color: transparent;\">" + "★".repeat(Math.floor(8 - spareBombs / 3)) + "</span>";
+				}
+				document.getElementById("tr_" + mode + "_maxSpareItems").children[difficulty + 1].innerHTML = text;
+			}
 			document.getElementById("tr_" + mode + "_spellCardsCaptured").children[difficulty + 1].innerText = persistentData[mode].spellCardsCaptured[difficulty] + " / 13";
 		}
 	}
@@ -333,14 +352,16 @@ export function processVirtueGain() {
 	document.getElementById("table_virtueCalculation_total").innerText = formatInteger(virtueGained);
 	persistentData.virtue += virtueGained;
 }
-export function updateRecord(label, value, opCode) { // `opCode` is "max" if this is a value to be maximised, and "min" if this is a value to be minimised.
-	let isUpgradeless = true;
-	upgradeLoop: for (let upgLevel of Object.values(persistentData.upgrades)) {
-		if (upgLevel !== 0) {
-			isUpgradeless = false;
-			break upgradeLoop;
+export function checkUpgradeless() {
+	for (let upg of Object.entries(persistentData.upgrades)) {
+		if ((!["autoShoot", "prestige"].includes(upg[0])) && (upg[1] !== 0)) {
+			return false;
 		}
 	}
+	return true;
+}
+export function updateRecord(label, value, opCode) { // `opCode` is "max" if this is a value to be maximised, and "min" if this is a value to be minimised.
+	let isUpgradeless = checkUpgradeless();
 	persistentData.records[label][difficulty] = Math[opCode](persistentData.records[label][difficulty], value);
 	if (isUpgradeless) {
 		persistentData.upgradelessRecords[label][difficulty] = Math[opCode](persistentData.upgradelessRecords[label][difficulty], value);

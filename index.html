@@ -109,6 +109,22 @@
 					<br>
 					<span id="span_dialogueBossName" style="font-size: 18px;"></span>
 				</div>
+				<div id="div_stageClearBonus" style="position: absolute; top: 120px; left: 65px; widtH: 400px; text-align: center;">
+					<span style="font-size: 30px;">No Continue Clear Bonus</span>
+					<table>
+						<tr><td>Stage</td><td id="span_stageClearBonus_stage"></td></tr>
+						<tr><td>Power</td><td id="span_stageClearBonus_power"></td></tr>
+						<tr><td>Graze</td><td id="span_stageClearBonus_graze"></td></tr>
+						<tr style="color: #ffcccc;"><td>Point Items</td><td id="span_stageClearBonus_pointItems"></td></tr>
+						<tr><td>Lives</td><td id="span_stageClearBonus_lives"></td></tr>
+						<tr><td>Bombs</td><td id="span_stageClearBonus_bombs"></td></tr>
+						<tr style="color: #ffcccc;"><td>Difficulty</td><td id="span_stageClearBonus_difficulty"></td></tr>
+						<tr style="font-weight: 700;"><td>Total</td><td id="span_stageClearBonus_total"></td></tr>
+					</table>
+				</div>
+				<table id="table_clearBonus">
+					<tr><td>Clear Bonus</td></tr>
+				</table>
 				<div id="gameSidebar" style="text-align: center; position: absolute; top: 10px; right: 4px; height: 600px; width: 250px;">
 					<span id="sidebar_difficulty" style="font-size: 18px;"></span>
 					<table>
@@ -128,9 +144,17 @@
 							<td>Lives</td>
 							<td id="sidebar_lives"></td>
 						</tr>
+						<tr style="color: #cc33cc;">
+							<td></td>
+							<td>Pieces <span id="sidebar_lifePieces"></span></td>
+						</tr>
 						<tr style="color: #33cc33;">
 							<td>Spell Cards</td>
 							<td id="sidebar_bombs"></td>
+						</tr>
+						<tr style="color: #33cc33;">
+							<td></td>
+							<td>Pieces <span id="sidebar_bombPieces"></span></td>
 						</tr>
 						<tr style="color: #ff3333;">
 							<td>Power</td>
@@ -167,7 +191,7 @@
 				<div class="userOption" data-menuWindow="pauseMenu" id="button_pauseMenu_startOver" style="left: 90px; width: 400px; text-align: left;">Start Over</div>
 			</div>
 			<div id="window_gameOver" style="position: absolute; display: none; text-align: center; height: 630px; width: 780px; background-color: #000000cc;">
-				<span style="color: #ccccff; font-weight: 700; font-size: 30px; padding-top: 10px;">Game Over!</span>
+				<span style="color: #ccccff; font-weight: 700; font-size: 30px; margin-top: 10px;">Game Over!</span>
 				<br>
 				<div class="userOption active" data-menuWindow="gameOver" id="button_gameOver_continueGame" style="left: 30px; width: 400px; text-align: left;">Continue</div>
 				<br>
@@ -342,10 +366,10 @@
 					<tr><th colspan="2">Backgrounds</th></tr>
 					<tr><td colspan="2">All backgrounds are either copyright-free stock images or original art.</td></tr>
 					<tr><th colspan="2">Music & Sound Effects</th></tr>
-					<tr><td>Title Theme</td><td><a href="https://soundcloud.com/user-214278566/overture-of-the-sprites-augusta-iaponicorum-ost?in=user-214278566/sets/augusta-iaponicorum-ost" target="_blank">Tokiko Tatsunagi - Overture of the Sprites</a></td></tr>
+					<tr><td>Title Theme<br>/ Bad Ending Theme</td><td><a href="https://soundcloud.com/user-214278566/overture-of-the-sprites-augusta-iaponicorum-ost?in=user-214278566/sets/augusta-iaponicorum-ost" target="_blank">Tokiko Tatsunagi - Overture of the Sprites</a></td></tr>
 					<tr><td>Stage Theme</td><td><a href="https://www.youtube.com/watch?v=YXZqocZvVEI" target="_blank">Tokiko Tatsunagi - An Addendum to the Past</a></td></tr>
 					<tr><td>Lexan's Theme</td><td><a href="https://www.youtube.com/watch?v=D70E0qSaCKM" target="_blank">Tokiko Tatsunagi - Augusta Iaponicorum</a></td></tr>
-					<tr><td>Ending Theme</td><td><a href="https://www.youtube.com/watch?v=GN-AwkrnYS0" target="_blank">Tokiko Tatsunagi - A Preface to the Future</a></td></tr>
+					<tr><td>Good Ending Theme</td><td><a href="https://www.youtube.com/watch?v=GN-AwkrnYS0" target="_blank">Tokiko Tatsunagi - A Preface to the Future</a></td></tr>
 					<tr><td colspan="2">All sound effects are sourced from official Touhou games, primarily <i>Touhou&nbsp;Kishinjou&nbsp;~&nbsp;Double&nbsp;Dealing&nbsp;Character</i>.</td></tr>
 				</table>
 			</div>
@@ -354,10 +378,40 @@
 					<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Changelog</span>
 				</div>
 				<div class="changelogDiv">
-					<h3>Version OP01.0 (2026-07-19)</h3>
+					<h3>Version OP01.2 (2026-07-25)</h3>
 					<ul>
-						<li>Initial release - stage, bosses, upgrades, records, credits.</li>
+						<li>Enemy bullets now slowly fade into the screen on spawn.</li>
+						<li>Relating to the previous change, stars during Lexan's sixth spell now have a 0.5s delay before they start shooting bullets, and a 0.5s delay before they stop shooting bullets and fly into the player. The end result is almost exactly the same.</li>
+						<li>Boss hitboxes now oscillate vertically over time to match the vertical oscillation of their sprites.</li>
+						<li>Bosses are no longer fully invincible during the first two seconds of each attack but instead have 90% damage reduction.</li>
+						<li>Flashier death animation - the player now becomes stationary for 0.4s after the death bomb window before their position resets and bullets are deleted, and a red circle is emitted during this time. The player's invincibility window after a miss is also 0.5s longer now.</li>
+						<li>The streaming bullets from the yin-yang orbs at the very start of the stage are no longer completely stationary on Easy difficulty.</li>
 					</ul>
+					(Continued on next page)
+				</div>
+				<div class="changelogDiv" style="display: none;">
+					<h3>Version OP01.2 continued</h3>
+					<ul>
+						<li>Bullets from witches and Lexan's second spell have improved visibility.</li>
+						<li>The second magma elemental now correctly drops a life piece rather than a bomb piece if the first was defeated.</li>
+						<li>The player's bullets now create a louder sound upon hitting an enemy, and now have associated visual effects.</li>
+						<li>If Lexan's fourth spell is reached for the second time in a session, the two poles no longer spawn on screen and then teleport back off screen the next minute.</li>
+						<li>The drops of Lexan's ninth spell (100 point items and a gold power item) are now spawned by the seventh shard (which is despawned during timeout) rather than above the screen.</li>
+						<li>Added a "no continue clear bonus" which gives extra score based on collected power/point items, graze points and spare lives/bombs.</li>
+						<li>The "Prestige" upgrade no longer prevents improving upgradeless records.</li>
+					</ul>
+					(Continued on next page)
+				</div>
+				<div class="changelogDiv" style="display: none;">
+					<h3>Version OP01.2 continued</h3>
+					<ul>
+						<li>Entering the Settings menu after playing a game no longer exits to a broken game over menu rather than the main menu.</li>
+						<li>X can now be used to exit a menu in addition to Esc.</li>
+						<li>Added a sound effect for getting a bomb.</li>
+						<li>Uncapped the number of lives and bombs which may be held by the player.</li>
+					</ul>
+				</div>
+				<div class="changelogDiv" style="display: none;">
 					<h3>Version OP01.1 (2026-07-19)</h3>
 					<ul>
 						<li>Bullets during Lexan's second spell card now have better contrast.</li>
@@ -367,7 +421,12 @@
 						<li>Added a changelog.</li>
 						<li>Added a Settings tab featuring volume sliders.</li>
 					</ul>
+					<h3>Version OP01.0 (2026-07-19)</h3>
+					<ul>
+						<li>Initial release - stage, bosses, upgrades, records, credits.</li>
+					</ul>
 				</div>
+				<div id="div_changelogPageNumber" style="position: absolute; bottom: 10px; right: 10px;"></div>
 			</div>
 		</div>
 	</body>

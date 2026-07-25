@@ -1,9 +1,9 @@
 import { activeBGMProperties, pauseBGM, playAudio, playBGM, unpauseBGM } from "./audio.js";
-import { advanceDialogue, currentDialogueId, dialogueList, startDialogue } from "./boss_data.js";
-import { continuesLeft, difficulty, endGame, frame, gameClockId, gameIsPaused, gameOverScreenActive, isInCutscene, lastBomb, startGame, togglePause, useBomb, useContinue } from "./game.js";
+import { advanceDialogue, Bosses, currentDialogueId, dialogueList, startDialogue } from "./boss_data.js";
+import { continuesLeft, difficulty, endGame, frame, gameClockId, gameIsPaused, gameOverScreenActive, isInCutscene, lastBomb, lastMiss, startGame, togglePause, useBomb, useContinue } from "./game.js";
 import { initializationComplete } from "./initialize.js";
-import { loadPersistentData, persistentData, savePersistentData, updateRecordInteface, updateUpgradeInterface, wipeSave } from "./persistent_data.js";
-import { modulo } from "./utility.js";
+import { loadPersistentData, persistentData, savePersistentData, updaterecordInterface, updateUpgradeInterface, wipeSave } from "./persistent_data.js";
+import { modulo, numberIsBounded } from "./utility.js";
 
 // The currently active window.
 export var activeWindow = "initialize";
@@ -30,7 +30,7 @@ export const ZPresses = {
 		// Records
 		2: function() {
 			openMenuWindow("records");
-			updateRecordInteface();
+			updaterecordInterface();
 		},
 		// Settings
 		3: function() {
@@ -44,6 +44,7 @@ export const ZPresses = {
 		// Changelog
 		5: function() {
 			openMenuWindow("changelog");
+			updateChangelogPageNumber();
 		},
 		// Wipe Save
 		6: function() {
@@ -183,7 +184,7 @@ function switchMenuButton(displacement) {
 // Switches the 13 buttons in Upgrades, accounting for their columnar layout.
 // Here, horizontal arrows advance by 1 and vertical arrows advance by 3, with changed behaviour surrounding the fifth row.
 function switchUpgradeMenuButton(displacement) {
-	let buttons = Array.from(document.querySelectorAll("[data-menuWindow='" + activeWindow + "']"));
+	let buttons = Array.from(document.querySelectorAll("[data-menuWindow='upgrades']"));
 	let currentPosition = buttons.map(x => x.classList.contains("active")).indexOf(true);
 	if (displacement > 0) {
 		if (currentPosition !== 12) {
@@ -206,6 +207,24 @@ function advanceCredits(displacement) {
 	document.getElementById("div_creditsTable" + currentCreditsTable).style.display = "inline-block";
 	playAudio("se_select00", "MENU");
 	document.getElementById("div_creditsTableNumber").innerText = (currentCreditsTable + 1) + " / 2 | Use arrow keys to advance";
+}
+// Displays a changelog page.
+var currentChangelogPage = 0;
+const changelogPages = document.getElementsByClassName("changelogDiv");
+function advanceChangelog(displacement) {
+	let newPage = currentChangelogPage + displacement;
+	if ((newPage === -1) || (newPage === changelogPages.length)) { // Out of bounds
+		playAudio("se_invalid", "MENU");
+	} else {
+		playAudio("se_select00", "MENU");
+		changelogPages[currentChangelogPage].style.display = "none";
+		changelogPages[newPage].style.display = "block";
+		currentChangelogPage = newPage;
+		updateChangelogPageNumber();
+	}
+}
+function updateChangelogPageNumber() {
+	document.getElementById("div_changelogPageNumber").innerText = (currentChangelogPage + 1) + " / " + changelogPages.length + " | Use arrow keys to advance";
 }
 // Contains which keys (arrow keys + shift for focus + z for shoot) are currently being held.
 export const activeKeys = {
@@ -231,7 +250,7 @@ export function keyDown(event) {
 		if (gameIsPaused) {
 			return;
 		}
-		if ((event.key.toLowerCase() === "x") && (frame - lastBomb > 350) && (!gameIsPaused) && (!isInCutscene)) { // Bomb duration is 6s.
+		if ((event.key.toLowerCase() === "x") && (frame - lastBomb > 350) && (!numberIsBounded(6, frame - lastMiss, 25)) && (!gameIsPaused) && (!isInCutscene)) { // Bomb duration is 6s. Prevent bombing during death animation.
 			useBomb();
 		}
 		if ((event.key.toLowerCase() === "z") && (currentDialogueId !== undefined)) {
@@ -247,7 +266,7 @@ export function keyDown(event) {
 			} else {
 				playAudio("se_invalid", "MENU");
 			}
-		} else if (event.key === "Escape") {
+		} else if ((event.key === "Escape") || (event.key.toLowerCase() === "x")) {
 			if (EscPresses[activeWindow] !== undefined) {
 				EscPresses[activeWindow]();
 				playAudio("se_cancel00", "MENU");
@@ -270,6 +289,12 @@ export function keyDown(event) {
 //					advanceCredits(-1);
 				} else if (event.key === "ArrowRight") {
 //					advanceCredits(1);
+				}
+			} else if (activeWindow === "changelog") {
+				if (event.key === "ArrowLeft") {
+					advanceChangelog(-1);
+				} else if (event.key === "ArrowRight") {
+					advanceChangelog(1);
 				}
 			} else {
 				if (event.key === "ArrowUp") {

@@ -30,7 +30,7 @@ function createYinYangOrb(targetPosition, streamingBulletMinTime, streamingBulle
 			createBullet(this.position, function(t) {
 				this.position[0] += vx;
 				this.position[1] += vy;
-			}, circularRenderFunction(6, "#ccccff", "#ffffff"), radialCollisionCheck(6));
+			}, circularRenderFunction(6, "#ccccff", "#ffffff", undefined, false), radialCollisionCheck(6));
 		}		
 		// Creates random bullets.
 		if ((t > 25) && (t % randomBulletInterval === 0)) {
@@ -38,7 +38,7 @@ function createYinYangOrb(targetPosition, streamingBulletMinTime, streamingBulle
 			let v = randomPolarVector(randomBulletMinSpeed, randomBulletMaxSpeed);
 			createBullet(addVectors(this.position, randomCartesianVector(15)), function() {
 				this.position = addVectors(this.position, v);
-			}, circularRenderFunction(4, "#ccccff", "#ffffff"), radialCollisionCheck(4));
+			}, circularRenderFunction(4, "#ccccff", "#ffffff", undefined, false), radialCollisionCheck(4));
 		}
 	}, yinYangOrbRenderFunction("#ccccff", "#0000ff"), radialCollisionCheck(9), 10, 500, (yinYangOrbSpawnCounter % 4 > 1) ? {power: 1} : {point: 1}, undefined, 270, 500, {bezierT: 0, speed: 2, acceleration: 0});
 	yinYangOrbSpawnCounter++;
@@ -51,7 +51,7 @@ function createYinYangOrb(targetPosition, streamingBulletMinTime, streamingBulle
 // On Lunatic, all bullets are faster and shot at a faster rate, and streaming bullets may be deflected.
 // We clear all of them out starting at frame 540 to make room for the title.
 function createStartingYinYangOrb(targetPosition) {
-	createYinYangOrb(targetPosition, [50, 25, 0, 0][difficulty], [200 + 10000 * ranint(0, 2), 125, 60, 30][difficulty], [300, 150, 60, 30][difficulty], [0, 4, 5, 6][difficulty], [0, 0, 0, 0.3][difficulty], 0.5, [9999, 9999, 9, 3][difficulty], [0, 0, 2, 4][difficulty], [0, 0, 3, 6][difficulty], 540);
+	createYinYangOrb(targetPosition, [50, 25, 0, 0][difficulty], [200 + 10000 * ranint(0, 2), 125, 60, 30][difficulty], [300, 150, 60, 30][difficulty], [3, 4, 5, 6][difficulty], [0, 0, 0, 0.3][difficulty], 0.5, [9999, 9999, 9, 3][difficulty], [0, 0, 2, 4][difficulty], [0, 0, 3, 6][difficulty], 540);
 }
 // The amber shards that shoot rings of diamonds with a constant phase difference, and upon defeat or timeout shoot a stream of bullets at the player.
 function createAmberShard(targetPosition, factor78 = Math.random()) {
@@ -79,7 +79,7 @@ function createAmberShard(targetPosition, factor78 = Math.random()) {
 				let v = polarToCartesian(diamondSpeed, angle);
 				createBullet(this.position, function(t) {
 					this.position = addVectors(this.position, v);
-				}, rectangularRenderFunction(24, 24, "#fd5909", "#ff9933", angle + Math.PI / 4), radialCollisionCheck(17));
+				}, rectangularRenderFunction(24, 24, "#fd5909", "#ff9933", angle + Math.PI / 4, false), radialCollisionCheck(17));
 			}
 		}
 		if (t === 420) { // If not destroyed fast enough, self-destructs and drops only 3 items instead of 6. The death explosion will spawn more bullets.
@@ -183,7 +183,7 @@ function createAmberOrbDiamondWaves(centre, amount, firstSize = (difficulty === 
 				let v = polarToCartesian(waveSpeed, angle);
 				createBullet(addVectors(centre, polarToCartesian(7 + waveNum + 2, angle)), function() { // Bullets will initially move into the centre before flying out.
 					this.position = addVectors(this.position, v);
-				}, rectangularRenderFunction(24, 24, "#fd5909", "#ff9933", angle + Math.PI / 4), radialCollisionCheck(17));
+				}, rectangularRenderFunction(24, 24, "#fd5909", "#ff9933", angle + Math.PI / 4, false), radialCollisionCheck(17));
 			}
 		})
 		firstSize = (difficulty === 3) ? Math.floor(randomReal(14.5, 16.5)) : (15 - firstSize);
@@ -454,7 +454,7 @@ function spiritFlameAnimation(position, color) {
 			} else {
 				this.position[1] -= 1.5;
 			}
-		}, circularRenderFunction(2, color, color), radialCollisionCheck(2, false)); // These bullets cannot be grazed.
+		}, circularRenderFunction(2, color, color), radialCollisionCheck(2, false), undefined, undefined, {indestructible: true}); // These bullets cannot be grazed.
 	}
 }
 // Creates the witch silhouettes that create glyphs which disperse into random bullets.
@@ -520,12 +520,12 @@ function witchShot1(position) {
 			createBullet(addVectors(this.position, polarToCartesian(-spawnerSpeed * bulletNum / spawnsPerFrame, this.angle)), function(t) {
 				let speed = (t < 40) ? 0 : (glyphSpeed * (1 - Math.exp((t - 40) * -glyphAccelerationFactor)));
 				this.position = addVectors(this.position, polarToCartesian(speed, angle));
-			}, circularRenderFunction(4, "#6600cc", "#9900ff"), radialCollisionCheck(4));
+			}, circularRenderFunction(4, "#9900cc", "#cc00ff", undefined, false), radialCollisionCheck(4));
 		}
 		if (t === lifespan) {
 			this.position[0] = 10000;
 		}
-	}, circularRenderFunction(5, "#6600cc", "#9900ff"), radialCollisionCheck(5), 1000, 1000, {angle: Math.PI * 2 * Math.random()})
+	}, circularRenderFunction(5, "#9900cc", "#cc00ff", undefined, false), radialCollisionCheck(5), 1000, 1000, {angle: Math.PI * 2 * Math.random()})
 }
 function witchShot2(position) {
 	let principalAngle = Math.PI * 2 * Math.random();
@@ -560,17 +560,17 @@ function witchShot2Bullet(position, angle, lifespan = 207) {
 			createBullet(structuredClone(this.position), function(t) {
 				let speed = (t < 40) ? 0 : (glyphSpeed * (1 - Math.exp((t - 40) * -glyphAccelerationFactor)));
 				this.position = addVectors(this.position, polarToCartesian(speed, angle));
-			}, circularRenderFunction(4, "#6600cc", "#9900ff"), radialCollisionCheck(4));
+			}, circularRenderFunction(4, "#9900cc", "#cc00ff", undefined, false), radialCollisionCheck(4));
 		}
 		this.lifespanLeft--;
 		if (this.lifespanLeft === 0) { // Do not force despawn in case any spawners are still left on the screen, but allow them to despawn naturally.
 			this.maximumX = Math.max(Math.abs(this.position[0]) + 5, 260);
 			this.maximumY = Math.max(Math.abs(this.position[1]) + 5, 310);
 		}
-	}, circularRenderFunction(5, "#6600cc", "#9900ff"), radialCollisionCheck(5), 1000, 1000, {angle: angle, lifespanLeft: lifespan})
+	}, circularRenderFunction(5, "#9900cc", "#cc00ff", undefined, false), radialCollisionCheck(5), 1000, 1000, {angle: angle, lifespanLeft: lifespan})
 }
 // Creates the eyes that shoot lasers at the player and then disappear. We count the number spawned to determine what item the next should drop.
-// On higher difficulties,, we shoot lasers to the sides as well.
+// On higher difficulties, we shoot lasers to the sides as well.
 var eyeSpawnCounter = 0;
 function createEye(position, deflectionMult) {
 	let dropIfAutokilled = [0, 3, 5, 6].includes(eyeSpawnCounter % 8) ? {point: 1} : {power: 1};
@@ -626,7 +626,7 @@ function createRedSpirit(initialAngle, angularDirection, verticalOffset) {
 			this.outerColor = hsltohex(colorTransitionProgress * 120, 60, 40 - colorTransitionProgress * 10);
 			// Change from #ff0000 = hsl(0, 60, 50) to #00ff00 = hsl(180, 60, 50).
 			this.innerColor = hsltohex(colorTransitionProgress * 120, 60, 50);
-			this.invincible = false;
+			this.damageModifier = 1;
 			let shotInterval = [30, 24, 20, 17][difficulty];
 			let totalBullets = [3, 4, 5, 6][difficulty];
 			if (verticalOffset !== 0) { // Weaken the red spirits that spawn during the volcano section as they're too spammy.
@@ -647,7 +647,7 @@ function createRedSpirit(initialAngle, angularDirection, verticalOffset) {
 		}
 	}, function(position) {
 		spiritRenderFunction(this.outerColor, this.innerColor)(position);
-	}, radialCollisionCheck(8), 8, 0, {point: 2, power: 1}, undefined, 600, 600, {outerColor: "#cc0000", innerColor: "#ff0000", invincible: true}); // These are not meant to be killed.
+	}, radialCollisionCheck(8), 8, 0, {point: 2, power: 1}, undefined, 600, 600, {outerColor: "#cc0000", innerColor: "#ff0000", damageModifier: 0}); // These are not meant to be killed until after the spiral eye wave.
 };
 // Creates the eyes that shoot streaming bullets in a circular orientation
 function createSpecialEye(distanceFromOrigin, angleFromOrigin) {
@@ -773,6 +773,7 @@ function createMagmaElemental(targetPosition) {
 		if (this.canShootExplosive) {
 			magmaElementalExplosiveShot(this.position, this.id);
 		}
+		magmaElementalsDefeated++;
 	}, undefined, undefined, {canShootExplosive: true, explosiveShotsLanded: 0, fireSeed: Math.random()});
 }
 function magmaElementalExplosiveShot(position, magmaElementalId, horizontalDirection) { // `horizontalDirection` is optional.
@@ -1002,34 +1003,6 @@ export function scheduleUnclearableStageEvent(time, func) {
 	unclearableExtraStageEvents[frame + time].push(func);
 }
 export const stageEvents = { // The usual stage effects are such that no more than one function is run per frame, but events scheduled by enemies may be scheduled for the same frame which is why an array is used.
-	1: function() {
-		// Clears all the stage data in case this is a replay.
-		playerPosition[0] = 0;
-		playerPosition[1] = 250;
-		yinYangOrbSpawnCounter = 0;
-		amberOrbsDefeated = 0;
-		UFOsDefeated = 0;
-		eyeSpawnCounter = 0;
-		yellowSpiritSpawnCounter = 0;
-		magmaElementalsDefeated = 0;
-		Bosses.zenryaku.frameDefeated = 99999;
-		Bosses.zenryaku.attacks.N1.randomSeed = Math.random();
-		Bosses.lexan.attacks.S1.nextFloor = undefined;
-		Bosses.lexan.attacks.S1.initialBulletLocations = [];
-		Bosses.lexan.attacks.S1.towerBulletsSpawned = 0;
-		Bosses.lexan.attacks.S1.towerFormationInProgress = false;
-		Bosses.lexan.attacks.S4.chargeAngle = 0;
-		Bosses.lexan.attacks.S4.chargeAngularSpeed = 0;
-		Bosses.lexan.attacks.S7.rinVerticalOffset = -1;
-		Bosses.lexan.attacks.S7.phase = 0;
-		Bosses.lexan.attacks.N8.rotationDirection = plusMinus1();
-		Bosses.lexan.attacks.S9.nextShardPosition = [220 * plusMinus1(), 270 * plusMinus1()];
-		Bosses.lexan.attacks.S10.slowDefeat = true;
-		Bosses.lexan.attacks.S10.currentPhase = 1;
-		Bosses.lexan.attacks.S10.phase2PrincipalAngle = undefined;
-		Bosses.lexan.attacks.S10.phase2Direction = plusMinus1();
-		Bosses.lexan.isDefeated = false;
-	},
 	10: function() {
 //		skipFrames(18280);
 	},
@@ -1214,6 +1187,7 @@ export const stageEvents = { // The usual stage effects are such that no more th
 	},
 	9000: function() {
 		createBoss("zenryaku");
+//		skipPhases(1);
 		currentBoss.targetPosition = [0, -150];
 	},
 	9075: function() {
@@ -1330,4 +1304,30 @@ export const stageEvents = { // The usual stage effects are such that no more th
 	18375: function() {
 		startDialogue(2);
 	}
+}
+export function resetStageData() {
+	yinYangOrbSpawnCounter = 0;
+	amberOrbsDefeated = 0;
+	UFOsDefeated = 0;
+	eyeSpawnCounter = 0;
+	yellowSpiritSpawnCounter = 0;
+	magmaElementalsDefeated = 0;
+	Bosses.zenryaku.frameDefeated = 99999;
+	Bosses.zenryaku.attacks.N1.randomSeed = Math.random();
+	Bosses.lexan.attacks.S1.nextFloor = undefined;
+	Bosses.lexan.attacks.S1.initialBulletLocations = [];
+	Bosses.lexan.attacks.S1.towerBulletsSpawned = 0;
+	Bosses.lexan.attacks.S1.towerFormationInProgress = false;
+	Bosses.lexan.attacks.S4.chargeSeparation = 550;
+	Bosses.lexan.attacks.S4.chargeAngle = 0;
+	Bosses.lexan.attacks.S4.chargeAngularSpeed = 0;
+	Bosses.lexan.attacks.S7.rinVerticalOffset = -1;
+	Bosses.lexan.attacks.S7.phase = 0;
+	Bosses.lexan.attacks.N8.rotationDirection = plusMinus1();
+	Bosses.lexan.attacks.S9.nextShardPosition = [220 * plusMinus1(), 270 * plusMinus1()];
+	Bosses.lexan.attacks.S10.slowDefeat = true;
+	Bosses.lexan.attacks.S10.currentPhase = 1;
+	Bosses.lexan.attacks.S10.phase2PrincipalAngle = undefined;
+	Bosses.lexan.attacks.S10.phase2Direction = plusMinus1();
+	Bosses.lexan.isDefeated = false;
 }
