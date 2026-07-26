@@ -41,13 +41,18 @@
 				<br>
 				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_records" style="left: 60px; width: 400px;">Records</div>
 				<br>
-				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_settings" style="left: 80px; width: 400px;">Settings</div>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_manual" style="left: 80px; width: 400px;">Manual</div>
 				<br>
-				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_credits" style="left: 100px; width: 400px;">Credits</div>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_settings" style="left: 100px; width: 400px;">Settings</div>
 				<br>
-				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_changelog" style="left: 120px; width: 400px;">Changelog</div>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_credits" style="left: 120px; width: 400px;">Credits</div>
 				<br>
-				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_wipeSave" style="left: 140px; width: 400px;">Wipe Save</div>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_changelog" style="left: 140px; width: 400px;">Changelog</div>
+				<br>
+				<div class="userOption" data-menuWindow="mainMenu" id="button_mainMenu_wipeSave" style="left: 160px; width: 400px;">Wipe Save</div>
+				<img src="assets/img/luigin_shadow.png" style="opacity: 0.1; position: absolute; right: 270px; bottom: 50px;" height="240" width="160">
+				<img src="assets/img/zenryaku_shadow.png" style="opacity: 0.1; position: absolute; right: 170px; top: 90px;" height="240" width="160">
+				<img src="assets/img/lexan_shadow.png" style="opacity: 0.1; position: absolute; right: 10px; bottom: 10px;" height="360" width="240">
 			</div>
 			<div id="window_chooseDifficulty" style="display: none; text-align: center;">
 				<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Choose a Difficulty:</span>
@@ -333,6 +338,69 @@
 					</tr>
 				</table>
 			</div>
+			<div id="window_manual" style="display: none; color: #ccccff;">
+				<div class="manualDiv">
+					<h3>Story</h3>
+					<p>Today is Annuation! Every year, on this night, the Ministry of Anarchy holds a firework show for the whole Capitol.</p>
+					<p>But now is no time for jubilation. Seismographs throughout the city have been acting up all day! The source of the vibrations seems to be the Annuation Mountain, an extinct volcano visible from the Capitol's shoreline.</p>
+					<p>Armed with the power of the nearby chemistry lab, Luigin Porqui leaves to figure out what is going on there.</p>
+				</div>
+				<div class="manualDiv" style="display: none;">
+					<h3>Basic Gameplay</h3>
+					<p>This is a shooting game where you shoot the enemies and dodge the enemies' bullets.</p>
+					<p>If you get hit by an enemy bullet, you will lose a life and enemy bullets on screen will be deleted. Losing all your lives results in a game over.</p>
+					<p>If you game over, you may use a continue to respawn at max power. However, this will reset your score, lives or bombs. You may continue up to 3 times per run; otherwise, you must restart from the beginning.</p>
+					<p>However, if an enemy bullet only passes close to your hitbox, you will gain a graze point which increases the value of blue point items.</p>
+					<p>Enemy waves spawn automatically from the top of the screen in sync with the stage music.</p>
+					<p>Halfway through the stage, there is a midboss, and at the end of the stage there is a stage boss. If you defeat the stage boss, you win the game.</p>
+					<p>(There is only one stage, the Calendar Stage.)</p>
+				</div>
+				<div class="manualDiv" style="display: none;">
+					<h3>Controls</h3>
+					<p>Use the arrow keys to move.</p>
+					<p>Hold Z to shoot bullets.</p>
+					<p>Holding Shift enters focused mode, which slows down your motion, shoots your bullets in a narrower arc and makes your hitbox visible on screen as a red circle.</p>
+					<p style="font-style: italic;">(Note that your hitbox only takes up about 10% of your player sprite.)</p>
+					<p>Pressing X uses a bomb, which makes you invincible for its duration and deletes enemy bullets it touches. You have a finite number of bombs, which is represented by the "Spell Card" meter on the sidebar. If you die with less than two bombs, your number of bombs will reset to two.</p>
+				</div>
+				<div class="manualDiv" style="display: none;">
+					<h3>Bosses</h3>
+					<p>Halfway through the stage, there is a midboss, and at the end of the stage there is a stage boss.</p>
+					<p>Each boss has multiple life bars; this is represented by a number to the left of the visible life bar. For example, "2" indicates that the boss has 2 more life bars in addition to the current one.</p>
+					<p>Bosses alternate between using normal attacks (shown as white sections of the boss life bar) and spell cards (shown as coloured sections of the boss life bar).</p>
+					<p>Normal attacks are incrementally stronger versions of the boss's basic attack.</p>
+					<p>Spell cards bedazzle the player with bullets crafted specifically for use in that spell card. While a spell card is active, the background will change and the </p>
+					<p>Each boss attack is also accompanied by a timer; if the timer runs out, the boss will move on to its next attack even if the life bar for the current phase has not been drained.</p>
+				</div>
+				<div class="manualDiv" style="display: none;">
+					<h3>Bosses (Continued)</h3>
+					<p>If a spell card is cleared without dying, bombing or running out of time, a large score bonus is awarded. This score bonus decreases with time taken to capture the spell.</p>
+					<p>Lexan's ninth spell card is an exception to this last point. This is a survival spell card; in other words, Lexan cannot be damaged during it, and this spell card can only be ended by reaching the end of its timer. If this is done without dying or bombing, the maximum score bonus is awarded.</p>
+					<p>While a boss is on the screen, no regular stage enemies will spawn. However, a boss may summon special enemies to accompany it during certain attacks.</p>
+				</div>
+				<div class="manualDiv" style="display: none;">
+					<h3>Items</h3>
+					<p>Defeated enemies drop items which slowly drift to the bottom of the screen. These items can be picked up by passing close to them and give a variety of helpful effects.</p>
+					<p>Going above the item autocollection line (shown at the start of the stage 75% of the way up the screen) will automatically collect every item currently on the screen. Items are also autocollected whenever a boss spawns.</p>
+					<p>Extra items are also given at certain score thresholds (shown in the game sidebar). These items' effects are automatically applied and do not need to be collected.</p>
+					<p>Below is a list of item types you will encounter playing <i>Ordinal Project 01</i>. (This list continues on the next page.)</p>
+					<table class="manualItemTable">
+						<tr style="color: #ff3333;"><td><img src="assets/img/item_power.png"></td><td>Power Item</td><td>Adds 0.01 power and 100 score. If collected at max power, adds 10&nbsp;000 score instead.</td></tr>
+						<tr style="color: #6666ff;"><td><img src="assets/img/item_point.png"></td><td>Point Item</td><td>Adds score equal to the current point value; this starts at 10&nbsp;000 and increases by 50 every time a bullet is grazed.</td></tr>
+					</table>
+				</div>
+				<div class="manualDiv" style="display: none;">
+					<h3>Item List (Continued)</h3>
+					<table class="manualItemTable">
+						<tr style="color: #e6b3e6;"><td><img src="assets/img/item_lifepiece.png"></td><td>Life Piece</td><td>Collecting three of these gives an extra life.</td></tr>
+						<tr style="color: #b3e6b3;"><td><img src="assets/img/item_bombpiece.png"></td><td>Bomb Piece</td><td>Collecting three of these gives an extra bomb.</td></tr>
+						<tr style="color: #cc66cc;"><td><img src="assets/img/item_extend.png"></td><td>Extend</td><td>Gives an extra life.</td></tr>
+						<tr style="color: #66cc66;"><td><img src="assets/img/item_spellcard.png"></td><td>Spell Card</td><td>Gives an extra bomb.</td></tr>
+						<tr style="color: #cccc00;"><td><img src="assets/img/item_fullpower.png"></td><td>Gold Power Item</td><td>Equivalent to 100 red power items.</td></tr>
+					</table>
+				</div>
+				<div id="div_manualPageNumber" style="position: absolute; bottom: 10px; right: 10px;"></div>
+			</div>
 			<div id="window_settings" style="display: none; text-align: center; color: #ccccff; height: 630px; width: 780px; cursor: auto; background-color: #000000;">
 				<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Settings</span>
 				<br>
@@ -378,33 +446,38 @@
 					<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Changelog</span>
 				</div>
 				<div class="changelogDiv">
+					<h3>Version OP01.3 (2026-07-26)</h3>
+					<ul>
+						<li>Added an in-game manual.</li>
+						<li>Added character silhouettes to the main menu.</li>
+					</ul>
 					<h3>Version OP01.2 (2026-07-25)</h3>
 					<ul>
 						<li>Enemy bullets now slowly fade into the screen on spawn.</li>
 						<li>Relating to the previous change, stars during Lexan's sixth spell now have a 0.5s delay before they start shooting bullets, and a 0.5s delay before they stop shooting bullets and fly into the player. The end result is almost exactly the same.</li>
 						<li>Boss hitboxes now oscillate vertically over time to match the vertical oscillation of their sprites.</li>
 						<li>Bosses are no longer fully invincible during the first two seconds of each attack but instead have 90% damage reduction.</li>
-						<li>Flashier death animation - the player now becomes stationary for 0.4s after the death bomb window before their position resets and bullets are deleted, and a red circle is emitted during this time. The player's invincibility window after a miss is also 0.5s longer now.</li>
-						<li>The streaming bullets from the yin-yang orbs at the very start of the stage are no longer completely stationary on Easy difficulty.</li>
 					</ul>
 					(Continued on next page)
 				</div>
 				<div class="changelogDiv" style="display: none;">
 					<h3>Version OP01.2 continued</h3>
 					<ul>
+						<li>Flashier death animation - the player now becomes stationary for 0.4s after the death bomb window before their position resets and bullets are deleted, and a red circle is emitted during this time. The player's invincibility window after a miss is also 0.5s longer now.</li>
+						<li>The streaming bullets from the yin-yang orbs at the very start of the stage are no longer completely stationary on Easy difficulty.</li>
 						<li>Bullets from witches and Lexan's second spell have improved visibility.</li>
 						<li>The second magma elemental now correctly drops a life piece rather than a bomb piece if the first was defeated.</li>
 						<li>The player's bullets now create a louder sound upon hitting an enemy, and now have associated visual effects.</li>
 						<li>If Lexan's fourth spell is reached for the second time in a session, the two poles no longer spawn on screen and then teleport back off screen the next minute.</li>
-						<li>The drops of Lexan's ninth spell (100 point items and a gold power item) are now spawned by the seventh shard (which is despawned during timeout) rather than above the screen.</li>
-						<li>Added a "no continue clear bonus" which gives extra score based on collected power/point items, graze points and spare lives/bombs.</li>
-						<li>The "Prestige" upgrade no longer prevents improving upgradeless records.</li>
 					</ul>
 					(Continued on next page)
 				</div>
 				<div class="changelogDiv" style="display: none;">
 					<h3>Version OP01.2 continued</h3>
 					<ul>
+						<li>The drops of Lexan's ninth spell (100 point items and a gold power item) are now spawned by the seventh shard (which is despawned during timeout) rather than above the screen.</li>
+						<li>Added a "no continue clear bonus" which gives extra score based on collected power/point items, graze points and spare lives/bombs.</li>
+						<li>The "Prestige" upgrade no longer prevents improving upgradeless records.</li>
 						<li>Entering the Settings menu after playing a game no longer exits to a broken game over menu rather than the main menu.</li>
 						<li>X can now be used to exit a menu in addition to Esc.</li>
 						<li>Added a sound effect for getting a bomb.</li>

@@ -279,7 +279,7 @@
 		}
 	}
 }
-.changelogDiv {
+.changelogDiv, .manualDiv {
 	position: absolute;
 	top: 65px;
 	left: 140px;
@@ -287,6 +287,30 @@
 	width: 500px;
 	li {
 		padding-bottom: 10px;
+	}
+}
+.manualItemTable {
+	display: inline-block;
+	tr {
+		td {
+			vertical-align: middle;
+			padding-bottom: 10px;
+			&:nth-child(1) {
+				width: 70px;
+				text-align: center;
+				img {
+					display: inline;
+				}
+			}
+			&:nth-child(2) {
+				width: 120px;
+				text-align: left;
+			}
+			&:nth-child(3) {
+				width: 300px;
+				text-align: left;
+			}
+		}
 	}
 }
 a {

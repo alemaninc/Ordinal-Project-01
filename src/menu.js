@@ -32,22 +32,27 @@ export const ZPresses = {
 			openMenuWindow("records");
 			updaterecordInterface();
 		},
-		// Settings
+		// Manual
 		3: function() {
+			openMenuWindow("manual");
+			updateManualPageNumber();
+		},
+		// Settings
+		4: function() {
 			openMenuWindow("settings");
 		},
 		// Credits
-		4: function() {
+		5: function() {
 			openMenuWindow("credits");
 			advanceCredits(-currentCreditsTable); // Rewinds to table 0.
 		},
 		// Changelog
-		5: function() {
+		6: function() {
 			openMenuWindow("changelog");
 			updateChangelogPageNumber();
 		},
 		// Wipe Save
-		6: function() {
+		7: function() {
 			wipeSaveClicksLeft--;
 			if (wipeSaveClicksLeft === 0) {
 				wipeSave();
@@ -143,6 +148,9 @@ const EscPresses = {
 	records: function() {
 		openMenuWindow("mainMenu");
 	},
+	manual: function() {
+		openMenuWindow("mainMenu");
+	},
 	settings: function() {
 		if (gameClockId === undefined) {
 			openMenuWindow("mainMenu");
@@ -198,6 +206,24 @@ function switchUpgradeMenuButton(displacement) {
 	buttons[newPosition].classList.add("active");
 	updateUpgradeInterface();
 	playAudio("se_select00", "MENU");
+}
+// Displays a manual page.
+var currentManualPage = 0;
+const manualPages = document.getElementsByClassName("manualDiv");
+function advanceManual(displacement) {
+	let newPage = currentManualPage + displacement;
+	if ((newPage === -1) || (newPage === manualPages.length)) { // Out of bounds
+		playAudio("se_invalid", "MENU");
+	} else {
+		playAudio("se_select00", "MENU");
+		manualPages[currentManualPage].style.display = "none";
+		manualPages[newPage].style.display = "block";
+		currentManualPage = newPage;
+		updateManualPageNumber();
+	}
+}
+function updateManualPageNumber() {
+	document.getElementById("div_manualPageNumber").innerText = (currentManualPage + 1) + " / " + manualPages.length + " | Use arrow keys to advance";
 }
 // Displays a credits table.
 var currentCreditsTable = 0;
@@ -283,6 +309,12 @@ export function keyDown(event) {
 					switchUpgradeMenuButton(-1);
 				} else if (event.key === "ArrowRight") {
 					switchUpgradeMenuButton(1);
+				}
+			} else if (activeWindow === "manual") {
+				if (event.key === "ArrowLeft") {
+					advanceManual(-1);
+				} else if (event.key === "ArrowRight") {
+					advanceManual(1);
 				}
 			} else if (activeWindow === "credits") {
 				if (event.key === "ArrowLeft") {
