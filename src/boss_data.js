@@ -21,7 +21,7 @@ export const Bosses = {
 			drawImage("zenryaku", position[0], position[1] + 15 * Math.sin(0.025 * frame), 0, 0.25);
 		},
 		collisionCheckFunction: function(position1, position2) { // `position1` is always the boss position
-			return rectangularCollisionCheck(150, 125)([position1[0], position1[1] + 15 * Math.sin(0.025 * frame)], position2);
+			return rectangularCollisionCheck(120, 100, false)([position1[0], position1[1] + 15 * Math.sin(0.025 * frame)], position2);
 		},
 		frameDefeated: 99999, // Set this to something else at time of defeat. Used for post-midboss enemy waves.
 		attacks: {
@@ -241,7 +241,7 @@ export const Bosses = {
 										if (scaledT > 2) {
 											this.position[0] = 1000;
 										}
-									}, circularRenderFunction(50, "#00cccc", "#00cccc", 1, false), radialCollisionCheck(50), 500, 500);
+									}, circularRenderFunction(50, "#00cccc80", "#00cccc", 1, false), radialCollisionCheck(50), 500, 500);
 								}
 							}
 							for (let dropNum = 0; dropNum < dropsPerSide * 2; dropNum++) {
@@ -269,7 +269,7 @@ export const Bosses = {
 										if (scaledT > 2) {
 											this.position[1] = 1000;
 										}
-									}, circularRenderFunction(50, "#00cccc", "#00cccc", 1, false), radialCollisionCheck(50), 500, 500);
+									}, circularRenderFunction(50, "#00cccc80", "#00cccc", 1, false), radialCollisionCheck(50), 500, 500);
 								}
 							}
 							for (let dropNum = 0; dropNum < dropsPerSide; dropNum++) {
@@ -300,7 +300,7 @@ export const Bosses = {
 			drawImage("lexan", position[0], position[1] + 15 * Math.sin(0.025 * frame), 0, 0.25);
 		},
 		collisionCheckFunction: function(position1, position2) { // `position1` is always the boss position
-			return rectangularCollisionCheck(150, 125)([position1[0], position1[1] + 15 * Math.sin(0.025 * frame)], position2);
+			return rectangularCollisionCheck(120, 100, false)([position1[0], position1[1] + 15 * Math.sin(0.025 * frame)], position2);
 		},
 		isDefeated: false, // We use this for the virtue progress multiplier (so it doesn't think we are in a stage section if the stage is cleared).
 		attacks: {
@@ -1555,7 +1555,20 @@ export const Bosses = {
 						currentBoss.targetPosition = clampVector(currentBoss.targetPosition, -125, 125, -175, -125);
 					}
 				}
-			}
+			},
+/*			S11: {
+				name: "\"Omelette Au Fromage Hon Hon Hon Oui Oui Oui Je Parle France Tres Bien Mon Ami\"",
+				HP: 10000,
+				guaranteedScore: 0,
+				captureScore: 0,
+				dropList: {},
+				maxFrames: 15400,
+				behaviourFunction: function(t) {
+					if (t === 1) {
+						createBullet([0, 0], function() {}, circularRenderFunction(20, "#990000", "#ff0000"), radialCollisionCheck(20));
+					}
+				}
+			} */
 		}
 	},
 	rin: {
@@ -1656,6 +1669,7 @@ export const dialogueList = {
 		text: "The Mountain is about to erupt. Please turn back immediately!",
 		maxFrames: 150,
 		onAdvance: function() {
+//			skipPhases(3);
 			hideBossTitleCard();
 			currentDialogueId = undefined;
 			endCutscene();
@@ -1894,7 +1908,7 @@ export const dialogueList = {
 		onAdvance: function() {
 			endCutscene();
 			currentDialogueId = undefined;
-//			skipPhases(9);
+//			skipPhases(10);
 		}
 	},
 	// Lexan's post-fight dialogue

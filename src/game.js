@@ -4,7 +4,7 @@ import { hsltohex } from "./color_converter.js";
 import { activeKeys, openMainMenu, openMenuWindow } from "./menu.js";
 import { checkUpgradeless, persistentData, processVirtueGain, savePersistentData, updateRecord, updateUpgradeEffectValues, upgradeEffectValues } from "./persistent_data.js";
 import { clearExtraStageEvents, extraStageEvents, resetStageData, scheduleStageEvent, scheduleUnclearableStageEvent, stageEvents, unclearableExtraStageEvents } from "./stage_events.js";
-import { addVectors, angleDifference, bezierCurve, formatDecimal, formatInteger, modulo, multiplyVectors, numberIsBounded, polarToCartesian, randomPolarVector, shuffleArray, squaredDistance } from "./utility.js";
+import { addVectors, angleDifference, bezierCurve, clampNumber, clampVector, formatDecimal, formatInteger, modulo, multiplyVectors, normalizeVector, numberIsBounded, polarToCartesian, randomPolarVector, shuffleArray, squaredDistance } from "./utility.js";
 import { circularRenderFunction, drawCanvas, drawCircle } from "./visuals.js";
 
 // Difficulty is 0, 1, 2 or 3 for easy, normal, hard or lunatic respectively.
@@ -12,7 +12,7 @@ export var difficulty;
 // `gameClockId` is the value created by setInterval when the game clock is initiated.
 export var gameClockId;
 // The radius of the player.
-export var playerHitboxRadius = 4.5;
+export var playerHitboxRadius = 3.6;
 // The maximum deflection from the centre of a ray at which the player's bomb ("Alpha Scattering") does damage.
 export const maxBombDeflection = 18 * Math.PI / 180; // 18 degrees
 // Whether the game is paused, and whether the game over screen is active.
@@ -135,23 +135,26 @@ function processScoreBonus() {
 // The number of frames that should have been run at the current point in time.
 var requiredFrames = 0;
 var lastTick = Date.now();
+function collisionCheckRadiusScale(x) {
+	return Math.max(x * 0.8, x - 5);
+}
 // 0 = no collision, 1 = graze, 2 = direct collision.
-export function radialCollisionCheck(radius, canGraze = true) {
+export function radialCollisionCheck(radius, canGraze = true, scaleDown = true) {
 	if (radius === 0) { // Special case - hidden bullet.
 		return function() {return 0};
 	}
-	let correctedRadius = radius + playerHitboxRadius;
-	let grazeRadius = canGraze ? (correctedRadius * 1.25 + 8) : correctedRadius;
+	let correctedRadius = (scaleDown ? collisionCheckRadiusScale(radius) : radius) + playerHitboxRadius;
+	let grazeRadius = canGraze ? (correctedRadius + 12) : correctedRadius;
 	return function(position1, position2) {
 		let squaredDistance = (position1[0] - position2[0]) * (position1[0] - position2[0]) + (position1[1] - position2[1]) * (position1[1] - position2[1]);
 		return (squaredDistance > (grazeRadius * grazeRadius)) ? 0 : (squaredDistance > (correctedRadius * correctedRadius)) ? 1 : 2;
 	}
 }
-export function rectangularCollisionCheck(height, width) {
-	let correctedHeight = height + playerHitboxRadius * Math.SQRT1_2;
-	let correctedWidth = width + playerHitboxRadius * Math.SQRT1_2;
-	let grazeHeight = correctedHeight * 1.25 + 8;
-	let grazeWidth = correctedWidth * 1.25 + 8;
+export function rectangularCollisionCheck(height, width, scaleDown = true) {
+	let correctedHeight = (scaleDown ? collisionCheckRadiusScale(height) : height) + playerHitboxRadius * Math.SQRT1_2;
+	let correctedWidth = (scaleDown ? collisionCheckRadiusScale(width) : width) + playerHitboxRadius * Math.SQRT1_2;
+	let grazeHeight = correctedHeight + 12 * Math.SQRT1_2;
+	let grazeWidth = correctedWidth + 12 * Math.SQRT1_2;
 	return function(position1, position2) {
 		let xOffset = Math.abs(position1[0] - position2[0]);
 		let yOffset = Math.abs(position1[1] - position2[1]);
@@ -568,21 +571,28 @@ function processFrame() {
 	let guaranteedBombRange = playerBombGuaranteedRange();
 	// Determine the player speed, and adjust the player's position.
 	if ((!numberIsBounded(5, frame - lastMiss, 25)) || bombActive || (frame - lastContinue < 25)) { // Keep player stationary during death animation, unless the player either death-bombed or continued.
-		let speed = (activeKeys.shift || bombActive) ? (2.4 * upgradeEffectValues.speedDown) : (7.2 * upgradeEffectValues.speedUp);
+//		let speed = (activeKeys.shift || bombActive) ? (2.4 * upgradeEffectValues.speedDown) : (7.2 * upgradeEffectValues.speedUp);
+		let speed = (activeKeys.shift || bombActive) ? (2.7 * upgradeEffectValues.speedDown) : (6.3 * upgradeEffectValues.speedUp);
+		let velocity = [0, 0];
 		if (activeKeys.arrowleft) {
-			playerPosition[0] -= speed;
+			velocity[0]--;
 		}
 		if (activeKeys.arrowright) {
-			playerPosition[0] += speed;
+			velocity[0]++;
 		}
-		playerPosition[0] = Math.max(-244, Math.min(playerPosition[0], 244)); // 5 pixels less than screen size to prevent hitbox being halfway out.
 		if (activeKeys.arrowup) {
-			playerPosition[1] -= speed;
+			velocity[1]--;
 		}
 		if (activeKeys.arrowdown) {
-			playerPosition[1] += speed;
+			velocity[1]++
 		}
-		playerPosition[1] = Math.max(-294, Math.min(playerPosition[1], 294));
+		console.log(playerPosition);
+		playerPosition = addVectors(playerPosition, normalizeVector(velocity, speed));
+		console.log(playerPosition);
+		 // 6 pixels less than screen size to prevent hitbox being halfway out.
+		playerPosition = clampVector(playerPosition, -244, 244, -294, 294);
+		console.log(playerPosition);
+		console.log("T");
 	}
 	if (currentBoss.bossId !== undefined) {
 		enemies[currentBoss.enemyId].position = addVectors(multiplyVectors(enemies[currentBoss.enemyId].position, 0.95), multiplyVectors(currentBoss.targetPosition, 0.05));
@@ -815,25 +825,16 @@ function processFrame() {
 		if ((frame % 5) === 0) {
 			playAudio("se_plst00", "PL", 0.25);
 		}
-		let instantaneousPlayerPosition = structuredClone(playerPosition);
-/*		if ((frame % 3) === 0) {
-			let currentOscillation = playerBulletOscillation;
-			let numberOfPaths = [2, 3, 4, 6][Math.floor(power / 100) - 1];
-			for (let i = 0; i < numberOfPaths; i++) {
-				let horizontalAngle = Math.cos(Math.PI * 2 * i / numberOfPaths + frame / (5 * numberOfPaths));
-				createPlayerBullet(addVectors(instantaneousPlayerPosition, [currentOscillation * horizontalAngle, -20]), function(t) {
-					this.position[0] += currentOscillation * horizontalAngle * t ** 0.5 * 0.003;
-					this.position[1] -= 1.5 * t ** 0.5;
-				}, 1);
-			} */
 		if ((frame % 3) === 0) {
 			let auxiliaryBulletStartPoints = [[16, -24], [24, -10], [32, -20], [40, -8]];
-			let auxiliaryBulletHorizontalSpeeds = [0.1, 0.18, 0.28, 0.4];
-			let auxiliaryBulletVerticalSpeeds = [1.48, 1.4, 1.44, 1.36];
+//			let auxiliaryBulletHorizontalSpeeds = [0.1, 0.18, 0.28, 0.4];
+			let auxiliaryBulletHorizontalSpeeds = [0.225, 0.405, 0.63, 0.9];
+//			let auxiliaryBulletVerticalSpeeds = [1.48, 1.4, 1.44, 1.36];
+			let auxiliaryBulletVerticalSpeeds = [3.33, 3.15, 3.24, 3.06];
 			let focusHorizontalFactor = activeKeys.shift ? 0.7 : 1;
 			for (let i = 0; i < Math.floor(power / 100); i++) {
 				for (let direction of [-1, 1]) {
-					createPlayerBullet(addVectors(instantaneousPlayerPosition, [(auxiliaryBulletStartPoints[i][0] * focusHorizontalFactor + 4) * direction, auxiliaryBulletStartPoints[i][1] * focusHorizontalFactor]), function(t) {
+					createPlayerBullet(addVectors(playerPosition, [(auxiliaryBulletStartPoints[i][0] * focusHorizontalFactor + 4) * direction, auxiliaryBulletStartPoints[i][1] * focusHorizontalFactor]), function(t) {
 						this.position[0] += auxiliaryBulletHorizontalSpeeds[i] * t ** 0.5 * direction * focusHorizontalFactor;
 						this.position[1] -= auxiliaryBulletVerticalSpeeds[i] * t ** 0.5 * focusHorizontalFactor;
 					}, upgradeEffectValues.unfocusedStrength, {mass: 0.125, velocity: [0, 0]}); // Mass and velocity is for Lexan's last spell, in addition to bullets' natural motion.
@@ -842,10 +843,11 @@ function processFrame() {
 		}
 		if ((frame % 2) === 0) {
 			for (let i of [-1, 1]) {
-				createPlayerBullet(addVectors(instantaneousPlayerPosition, [i * 8, -9]), function(t) {
-					this.position[1] -= 2 * t ** 0.5;
-					this.angle = Math.atan2(this.velocity[1] - 2 * t ** 0.5, this.velocity[0]);
-				}, upgradeEffectValues.focusedStrength, {mass: 0.125, angle: -Math.PI / 2, velocity: [0, 0]}); // Mass, angle and velocity are for Lexan's last spell.
+				createPlayerBullet(addVectors(playerPosition, [i * 8, -9]), function(t) {
+//					this.position[1] -= 2 * t ** 0.5;
+					this.position[1] -= 4.5 * t ** 0.5;
+					this.angle = Math.atan2(this.velocity[1] - 4.5 * t ** 0.5, this.velocity[0]);
+				}, upgradeEffectValues.focusedStrength, {mass: 0.125 / 2.25, angle: -Math.PI / 2, velocity: [0, 0]}); // Mass, angle and velocity are for Lexan's last spell.
 			}
 		}
 	}

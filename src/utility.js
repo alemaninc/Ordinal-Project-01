@@ -126,3 +126,11 @@ export function predictableRandom(x) {
 	}
 	return start / b;
 }
+// Returns a vector in the same direction as an input `vector` but with a fixed `magnitude`.
+export function normalizeVector(vector, magnitude, ifZero = [0, 0]) {
+	if ((vector[0] === 0) && (vector[1] === 0)) {
+		return ifZero;
+	}
+	let initialMagnitude = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
+	return multiplyVectors(vector, magnitude / initialMagnitude);
+}

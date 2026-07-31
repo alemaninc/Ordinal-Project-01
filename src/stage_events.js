@@ -483,8 +483,8 @@ function createWitch(type) {
 		// - one from (46, 18) to (91, 81) - i.e. centre (68.5, 49.5), height 63, width 45;
 		// - one from (34, 70) to (124, 72) - i.e. centre (89, 71), height 3, width 91.
 		return Math.max(
-			rectangularCollisionCheck(63, 45)(addVectors(position1, [20.5, 1.5]), position2),
-			rectangularCollisionCheck(3, 91)(addVectors(position1, [17, 23]), position2),
+			rectangularCollisionCheck(63, 45, false)(addVectors(position1, [20.5, 1.5]), position2),
+			rectangularCollisionCheck(3, 91, false)(addVectors(position1, [17, 23]), position2),
 		);
 	}, 100, score, dropList, function() {
 		if (this.canShoot) {
@@ -978,7 +978,7 @@ function createSuperMagmaElemental() {
 		if (t > 1080) { // Exits the screen.
 			this.position[1] += (t - 1080) / 30;
 		}
-	}, magmaElementalRenderFunction(5.5), radialCollisionCheck(220), 3000, 100000, {extend: 1, power: 50, point: 50}, undefined, 600, undefined,
+	}, magmaElementalRenderFunction(5.5), radialCollisionCheck(220, true, false), 3000, 100000, {extend: 1, power: 50, point: 50}, undefined, 600, undefined,
 	{explosiveShotsLanded: 0, smallFireSeed: 0, largeFireSeed: 0})
 }
 
@@ -1004,7 +1004,7 @@ export function scheduleUnclearableStageEvent(time, func) {
 }
 export const stageEvents = { // The usual stage effects are such that no more than one function is run per frame, but events scheduled by enemies may be scheduled for the same frame which is why an array is used.
 	10: function() {
-//		skipFrames(18280);
+//		skipFrames(16900);
 	},
 	100: function() {
 		playBGM("bgm_stage", 368, 389.8);

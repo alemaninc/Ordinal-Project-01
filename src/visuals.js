@@ -312,10 +312,6 @@ export function drawCanvas() {
 	}
 	// 2. Draw the player
 	drawImage("luigin_front" + (((frame - lastMiss > 125) && (frame - lastBomb > 350)) ? "" : ((frame - lastMiss > 25) || (frame - lastContinue < 25)) ? "_invincible" : "_miss"), playerPosition[0], playerPosition[1] + 10, (activeKeys.arrowright ? 0.15 : 0) - (activeKeys.arrowleft ? 0.15 : 0));
-	if (activeKeys.shift) { // show hitbox if focused
-		let playerHitboxRenderFunction = circularRenderFunction(playerHitboxRadius, "#990000");
-		playerHitboxRenderFunction(playerPosition);
-	}
 	// 3. Draw enemies.
 	let enemyIds = Object.keys(enemies);
 	for (let id of enemyIds) {
@@ -362,6 +358,10 @@ export function drawCanvas() {
 	for (let id of bulletIds) {
 		let position = bullets[id].position;
 		bullets[id].renderFunction(position);
+	}
+	if (activeKeys.shift) { // Show player hitbox if focused
+		let playerHitboxRenderFunction = circularRenderFunction(4.5, "#990000");
+		playerHitboxRenderFunction(playerPosition);
 	}
 	// Update the boss's visuals.
 	if ((currentBoss.bossId === undefined) || isInCutscene) {
