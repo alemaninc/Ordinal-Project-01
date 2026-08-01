@@ -212,7 +212,7 @@ const itemCollectionFunctions = {
 		if (power < 400) { // Power will always go up in this case.
 			playAudio("se_powerup", "PL");
 		}
-		score += 10000 * Math.max(power - 300, 0);
+		score += 10000 + 9900 * Math.max(power - 300, 0);
 		power = Math.min(power + 100, 400);
 	},
 	point: function() {
@@ -509,7 +509,7 @@ export function stageClearBonus() {
 	out += power * 5;
 	document.getElementById("span_stageClearBonus_power").innerText = power * 5;
 	out += graze * 5;
-	document.getElementById("span_stageClearBonus_graze").innerText = power * 5;
+	document.getElementById("span_stageClearBonus_graze").innerText = graze * 5;
 	out *= pointItemsCollected;
 	document.getElementById("span_stageClearBonus_pointItems").innerText = "× " + pointItemsCollected;
 	out += Math.floor(lives / 3) * 1000000 + (lives % 3) * 250000;

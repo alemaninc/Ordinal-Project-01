@@ -1004,7 +1004,7 @@ export function scheduleUnclearableStageEvent(time, func) {
 }
 export const stageEvents = { // The usual stage effects are such that no more than one function is run per frame, but events scheduled by enemies may be scheduled for the same frame which is why an array is used.
 	10: function() {
-//		skipFrames(16900);
+		skipFrames(16900);
 	},
 	100: function() {
 		playBGM("bgm_stage", 368, 389.8);

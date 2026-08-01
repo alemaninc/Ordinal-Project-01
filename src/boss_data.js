@@ -1,4 +1,4 @@
-import { playAudio, playBGM, playSingleAudio } from "./audio.js";
+import { playAudio, playBGM, playSingleAudio, stopBGM } from "./audio.js";
 import { hsltohex } from "./color_converter.js";
 import { angleToObject, angleToPlayer, bearingToAngle, beginCutscene, bombIsActive, bullets, continuesLeft, createBoss, createBullet, createEnemy, currentBoss, difficulty, endCutscene, endGame, enemies, enemyCounter, frame, isInCutscene, playerBullets, playerPosition, radialCollisionCheck, rectangularCollisionCheck, skipPhases, stageClearBonus } from "./game.js"
 import { openEnding, openMenuWindow } from "./menu.js";
@@ -1908,7 +1908,7 @@ export const dialogueList = {
 		onAdvance: function() {
 			endCutscene();
 			currentDialogueId = undefined;
-//			skipPhases(10);
+			skipPhases(9);
 		}
 	},
 	// Lexan's post-fight dialogue
@@ -1956,8 +1956,10 @@ export const dialogueList = {
 		onAdvance: function() {
 			stageClearBonus();
 			setTimeout(function() {
-				endGame();
-				processVirtueGain();
+				endGame(true);
+				stopBGM();
+				processVirtueGain(); // We open the virtue screen separately instead of through ending the game as otherwise the ending can get overwritten by the main menu.
+				openMenuWindow("virtueCalculation");
 			}, 5000);
 			setTimeout(function() {
 				openEnding();
