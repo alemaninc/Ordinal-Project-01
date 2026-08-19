@@ -1,4 +1,5 @@
 import { Bosses, currentDialogueId, dialogueList, dialoguePortraitVisibilities } from "./boss_data.js";
+import { hexBlend } from "./color_converter.js";
 import { bullets, enemies, fps, canvasContext, graze, lives, playerBullets, playerHitboxRadius, playerPosition, pointValue, power, score, items, frame, bombs, lastBomb, playerBombAngles, playerBombRange, maxBombDeflection, playerBombGuaranteedRange, angleToPlayer, currentBoss, isInCutscene, canGetSpellCard, spellCardBonus, scoreForNextBonus, collectedScoreBonuses, lastMiss, lastContinue, particles } from "./game.js";
 import { activeKeys } from "./menu.js";
 import { virtueProgressMultiplier } from "./persistent_data.js";
@@ -6,7 +7,7 @@ import { addVectors, clampNumber, formatInteger, layeredLinearGradient, multiply
 
 const images = {};
 // Lists all the image files which must be loaded by their file name (excluding the file ending if it is "png").
-export const requiredImages = ["enemy_amberorb", "enemy_ambershard1", "enemy_ambershard2", "enemy_eye", "enemy_magmaelemental", "enemy_memoryshard1", "enemy_memoryshard2", "enemy_ufo_i1", "enemy_ufo_i2", "enemy_ufo_l1", "enemy_ufo_l2", "enemy_ufo_o1", "enemy_ufo_o2", "enemy_ufo_t1", "enemy_ufo_t2", "enemy_ufo_z1", "enemy_ufo_z2", "enemy_witch", "item_bombpiece", "item_extend", "item_fullpower", "item_lifepiece", "item_point", "item_power", "item_spellcard", "lexan", "lexan2", "luigin_front", "luigin_front_invincible", "luigin_front_miss", "luigin", "stagebg1", "stagebg2.jpg", "stagebg3.jpg", "zenryaku"];
+export const requiredImages = ["enemy_amberorb", "enemy_ambershard1", "enemy_ambershard2", "enemy_eye", "enemy_magmaelemental", "enemy_memoryshard1", "enemy_memoryshard2", "enemy_ufo_i1", "enemy_ufo_i2", "enemy_ufo_l1", "enemy_ufo_l2", "enemy_ufo_o1", "enemy_ufo_o2", "enemy_ufo_t1", "enemy_ufo_t2", "enemy_ufo_z1", "enemy_ufo_z2", "enemy_witch", "item_bombpiece", "item_deletedbullet", "item_extend", "item_fullpower", "item_lifepiece", "item_point", "item_power", "item_spellcard", "lexan", "lexan2", "luigin_front", "luigin_front_invincible", "luigin_front_miss", "luigin", "zenryaku"];
 // We store this to be able to calculate how many files have been loaded for the loading screen.
 export var imageFilesLoaded = 0;
 // Retrieves an image and increments `imageFilesLoaded` once it is available.
@@ -48,9 +49,6 @@ export function drawImage(id, centreX, centreY, angle = 0, zoom = 1, reflect = f
 }
 // Draws a circle with a smooth outline, which may or may not include internal filling. Mainly used for bullets.
 export function drawCircle(position, radius, outerColor, innerColor = "#00000000", numberOfStrokes = (radius < 5) ? 1 : (1 + Math.ceil(radius / 10))) {
-	if (outerColor === undefined) {
-		console.log(position);
-	}
 	canvasContext.beginPath();
 	canvasContext.arc(position[0] + 250, position[1] + 300, radius, 0, Math.PI * 2, true);
 	canvasContext.fillStyle = innerColor;
@@ -185,7 +183,7 @@ export function eyeRenderFunction(rotationAngle = 0) {
 		let opacity = Math.min(lifetime / 40, 1);
 		drawImage("enemy_eye", position[0], position[1], rotationAngle, undefined, undefined, opacity);
 		// Draw the pupil in the centre initially, and move to face the player after this.
-		let pupilDeflection = Math.max(0, Math.min(lifetime / 12, 5));
+		let pupilDeflection = Math.max(0, Math.min(lifetime / 8, 5));
 		let pupilPosition = addVectors(position, polarToCartesian(pupilDeflection, angleToPlayer(position)));
 		let pupilColour = "#ff0000" + Math.round(opacity * 255).toString(16).padStart(2, "0");
 		drawCircle(pupilPosition, 3, "#00000000", pupilColour);
@@ -383,31 +381,33 @@ export function drawCanvas() {
 		document.getElementById("div_bossPhasesLeft").style.color = color;
 		document.getElementById("div_bossPhasesLeft").innerText = Bosses[currentBoss.bossId].phases - currentBoss.phase;
 		document.getElementById("div_bossLifeBar").style.opacity = 1;
-		// There are four cases we consider for the current phase's health bar:
-		// 1. there is only a non-spell or only a spell card, and this is not Lexan's final spell;
-		// 2. there is a non-spell and spell card and we are currently in the spell card;
-		// 3. there is a non-spell and spell card and we are currently in the non-spell.
-		// 4. this is Lexan's final spell.
-		let maxBarPercent = Math.min(currentBoss.currentAttackTime / 30, 1);
-		if (currentBoss.phase === 10) { // Case 4
-			let phase = currentAttack.currentPhase;
-			let gradientColors = [["#0000ff", 0]];
-			for (let phaseNum = 3; phaseNum >= phase; phaseNum--) {
-				gradientColors.push(["#" + (340 - phaseNum * 85).toString(16).repeat(2) + "ff", Math.min(currentAttack.phaseTransitions.HP[phaseNum - 1] / currentAttack.HP, maxBarPercent)]);
+		// There are three broad cases we consider for the current phase's health bar:
+		// - there is only a non-spell or only a spell card, and this is not Lexan's final spell;
+		// - there is a non-spell and spell card and we are currently in the spell card;
+		// - there is a non-spell and spell card and we are currently in the non-spell;
+		let maxBarPercent = Math.min((currentBoss.currentAttackTime - currentBoss.initialCAT) / 30, 1);
+		let totalNonHP = attackData["N" + currentBoss.phase]?.HP ?? 0;
+		let totalSpellHP = attackData["S" + currentBoss.phase]?.HP ?? 0;
+		let totalHP = totalNonHP + totalSpellHP;
+		let gradient = [];
+		if (totalSpellHP !== 0) { // The spell's HP.
+			gradient.push([color, 0]);
+			if (attackData["S" + currentBoss.phase].totalPhases !== undefined) { // Code to render the boss's various phases, from "maximum - 1" (since full colour was already added) to the `currentPhase` inclusive.
+				for (let phase = attackData["S" + currentBoss.phase].totalPhases - 1; phase >= attackData["S" + currentBoss.phase].currentPhase; phase--) {
+					gradient.push([hexBlend(color, phase / attackData["S" + currentBoss.phase].totalPhases, "#ffffff"), attackData["S" + currentBoss.phase].phaseTransitions.HP[phase - 1] / totalHP]);
+				}
 			}
-			gradientColors.push(["rgba(0, 0, 0, 0)", Math.min(enemies[currentBoss.enemyId].HP / currentAttack.HP, maxBarPercent)]);
-			document.getElementById("div_bossLifeBar").style.background = layeredLinearGradient(gradientColors);
-		} else if ((attackData["N" + currentBoss.phase] === undefined) || (attackData["S" + currentBoss.phase] === undefined)) { // Case 1
-			let bossLifePercent = Math.min(enemies[currentBoss.enemyId].HP / currentAttack.HP, maxBarPercent);
-			document.getElementById("div_bossLifeBar").style.background = layeredLinearGradient([[currentBoss.isInSpellCard ? color : "#ffffff", 0], ["rgba(0, 0, 0, 0)", bossLifePercent]])
-		} else if (currentBoss.isInSpellCard) { // Case 2
-			let bossLifePercent = enemies[currentBoss.enemyId].HP / (attackData["N" + currentBoss.phase].HP + attackData["S" + currentBoss.phase].HP); // Do not apply maximum percent here as this is not the first attack in the bar.
-			document.getElementById("div_bossLifeBar").style.background = layeredLinearGradient([[color, 0], ["rgba(0, 0, 0, 0)", bossLifePercent]]);
-		} else { // Case 3
-			let bossLifePercent = Math.min((enemies[currentBoss.enemyId].HP + attackData["S" + currentBoss.phase].HP) / (attackData["N" + currentBoss.phase].HP + attackData["S" + currentBoss.phase].HP), maxBarPercent);
-			let percentAtTransition = Math.min(attackData["S" + currentBoss.phase].HP / (attackData["N" + currentBoss.phase].HP + attackData["S" + currentBoss.phase].HP), maxBarPercent);
-			document.getElementById("div_bossLifeBar").style.background = layeredLinearGradient([[color, 0], ["#ffffff", percentAtTransition], ["rgba(0, 0, 0, 0)", bossLifePercent]])
 		}
+		if ((totalNonHP !== 0) && (!currentBoss.isInSpellCard)) { // The non-spell's HP. If the non-spell does not exist, `isInSpellCard` will never be false so this part can never trigger.
+			gradient.push(["#ffffff", totalSpellHP / totalHP]);
+		}
+		gradient.push(["#00000000", (enemies[currentBoss.enemyId].HP + (currentBoss.isInSpellCard ? 0 : totalSpellHP)) / totalHP]);
+		if ((totalNonHP === 0) || (!currentBoss.isInSpellCard)) { // Ignore max bar percent only if this is a spell card following a nonspell.
+			gradient = gradient.map(x => [x[0], Math.min(x[1], maxBarPercent)]);
+		}
+		document.getElementById("div_bossLifeBar").style.background = layeredLinearGradient(gradient);
+
+		// End of health bar code
 		document.getElementById("div_bossLifeBarName").style.opacity = 1;
 		document.getElementById("div_bossLifeBarName").style.color = color;
 		document.getElementById("div_bossLifeBarName").innerText = Bosses[currentBoss.bossId].name;
@@ -451,14 +451,16 @@ export function drawCanvas() {
 		}
 	}
 	// Also draws the boss sprite for a spell card background.
-	if (currentBoss.isInSpellCard && numberIsBounded(20, currentBoss.currentAttackTime, 100)) {
-		let progress = ((currentBoss.currentAttackTime < 40) ? (currentBoss.currentAttackTime * 0.05 - 2) : (currentBoss.currentAttackTime < 80) ? 0 : (currentBoss.currentAttackTime * 0.05 - 4)) + (currentBoss.currentAttackTime - 60) * 0.005;
-		drawImage(currentBoss.bossId, progress * -400, progress * 100, 0, 0.9);
-	}
-	// And Rin's sprite~
-	if (currentBoss.isInSpellCard && (currentBoss.phase === 7) && numberIsBounded(80, currentBoss.currentAttackTime, 160)) {
-		let progress = ((currentBoss.currentAttackTime < 100) ? (currentBoss.currentAttackTime * 0.05 - 5) : (currentBoss.currentAttackTime < 140) ? 0 : (currentBoss.currentAttackTime * 0.05 - 7)) + (currentBoss.currentAttackTime - 120) * 0.005;
-		drawImage("lexan2", progress * -400, progress * 100, 0, 0.9);
+	if ((currentBoss.bossId !== undefined) && (currentBoss.isInSpellCard)) {
+		if (numberIsBounded(20, currentBoss.currentAttackTime, 100)) {
+			let progress = ((currentBoss.currentAttackTime < 40) ? (currentBoss.currentAttackTime * 0.05 - 2) : (currentBoss.currentAttackTime < 80) ? 0 : (currentBoss.currentAttackTime * 0.05 - 4)) + (currentBoss.currentAttackTime - 60) * 0.005;
+			drawImage(currentBoss.bossId, progress * -400, progress * 100, 0, 0.9);
+		}
+		// And Rin's sprite~
+		if ((currentBoss.phase === 7) && numberIsBounded(80, currentBoss.currentAttackTime, 160)) {
+			let progress = ((currentBoss.currentAttackTime < 100) ? (currentBoss.currentAttackTime * 0.05 - 5) : (currentBoss.currentAttackTime < 140) ? 0 : (currentBoss.currentAttackTime * 0.05 - 7)) + (currentBoss.currentAttackTime - 120) * 0.005;
+			drawImage("lexan2", progress * -400, progress * 100, 0, 0.9);
+		}
 	}
 	// Finally, update the sidebar.
 	document.getElementById("sidebar_score").innerText = formatInteger(Math.min(score, 999999999));

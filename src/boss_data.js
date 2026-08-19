@@ -3,7 +3,7 @@ import { hsltohex } from "./color_converter.js";
 import { angleToObject, angleToPlayer, bearingToAngle, beginCutscene, bombIsActive, bullets, continuesLeft, createBoss, createBullet, createEnemy, currentBoss, difficulty, endCutscene, endGame, enemies, enemyCounter, frame, isInCutscene, playerBullets, playerPosition, radialCollisionCheck, rectangularCollisionCheck, skipPhases, stageClearBonus } from "./game.js"
 import { openEnding, openMenuWindow } from "./menu.js";
 import { processVirtueGain } from "./persistent_data.js";
-import { scheduleStageEvent, scheduleUnclearableStageEvent } from "./stage_events.js";
+import { createMagmaElemental, scheduleStageEvent, scheduleUnclearableStageEvent } from "./stage_events.js";
 import { addVectors, clampNumber, clampVector, countTo, modulo, multiplyVectors, numberIsBounded, plusMinus1, polarToCartesian, randomCartesianVector, randomPolarVector, randomReal, ranint, rotateVector, shuffleArray, squaredDistance } from "./utility.js";
 import { amberShardRenderFunction, arrowBulletRenderFunction, blackHoleRenderFunction, circularRenderFunction, drawImage, memoryShardRenderFunction } from "./visuals.js";
 
@@ -205,6 +205,9 @@ export const Bosses = {
 				maxFrames: 1000,
 				onDefeat: function() {
 					Bosses.zenryaku.frameDefeated = frame; // Store the frame at which Zenryaku was defeated. Used for time-filling waves before the volcano section properly begins.
+					scheduleUnclearableStageEvent(Math.max(13775 - Bosses.zenryaku.frameDefeated, 25), function() {
+						createMagmaElemental([0, -200]);
+					})
 				},
 				behaviourFunction: function(t) {
 					if (t === 0) {
@@ -477,7 +480,7 @@ export const Bosses = {
 						currentBoss.targetPosition = clampVector(currentBoss.targetPosition, -60, 60, -110, 10);
 					}
 					let shotInterval = [100, 90, 80, 70][difficulty];
-					if ((t - 80) % shotInterval === 0) {
+					if ((t - 79) % shotInterval === 1) { // Avoid `(t - 80) % shotInterval = 0` as this can fire at negative times.
 						playAudio("se_boon00", "EN");
 						let primaryAngle = angleToPlayer(enemies[currentBoss.enemyId].position);
 						let ringSize = [3, 4, 5, 6][difficulty];
@@ -919,6 +922,7 @@ export const Bosses = {
 				rinId: undefined, // The enemy ID of the second Lexan.
 				behaviourFunction: function(t) {
 					if (t === 1) {
+						playAudio("se_heal");
 						currentBoss.targetPosition = clampVector(currentBoss.targetPosition, 150, 200, -200, -100);
 						this.rinId = enemyCounter;
 						createEnemy([500, -300], function() {
@@ -956,9 +960,17 @@ export const Bosses = {
 				maxFrames: 4300,
 				rinId: undefined,
 				rinVerticalOffset: -1,
-				phase: 0, // Whether the attack is in phase 1 (transmitting and seeking bullets) or phase 2 (rotating bullets). 0 means no attacks.
+				totalPhases: 2,
+				currentPhase: 1, // Whether the attack is in phase 1 (transmitting and seeking bullets) or phase 2 (rotating bullets).
+				phaseTransitions: {
+					HP: [1100], // Not actually used by the behaviour function but the life bar needs this to work correctly.
+				},
+				isIdle: true, // Used between phase transitions. Stops all shooting.
+				onDefeat: function() {
+					playAudio("se_enep01", "EN"); // For Rin.
+				},
 				behaviourFunction: function(t) {
-					if (t === 1) {
+					if (t === currentBoss.initialCAT + 1) { // Avoid period of rin being invisible
 						this.rinId = enemyCounter;
 						createEnemy([-enemies[currentBoss.enemyId].position[0], enemies[currentBoss.enemyId].position[1]], function() {
 							// This enemy does nothing except transfer his damage to Lexan and mirror his position. The behaviour of the two attack-wise is controlled by the general boss behaviour function.
@@ -972,101 +984,104 @@ export const Bosses = {
 					// Meanwhile Lexan shoots waves of bullets that upon reaching the sides are redirected to small angles away from the player.
 					// Below 1100 HP or 38 seconds left, Rin and Lexan move apart, and start shooting patterns resembling those of the yellow spirit.
 					if (t === 80) {
-						Bosses.lexan.attacks.S7.phase = 1;
+						Bosses.lexan.attacks.S7.isIdle = false;
 					}
 					let motionProgress = (Math.max(t - 80, 0) / 320 + 0.5) % 4;
 					currentBoss.targetPosition = (motionProgress < 1) ? [220, motionProgress * 540 - 270] : (motionProgress < 2) ? [660 - motionProgress * 440, 270] : (motionProgress < 3) ? [-220, 1350 - motionProgress * 540] : [motionProgress * 440 - 1540, -270];
 					enemies[this.rinId].targetPosition = [-currentBoss.targetPosition[0], currentBoss.targetPosition[1] * this.rinVerticalOffset];
-					if (Bosses.lexan.attacks.S7.phase === 1) {
-//						currentBoss.targetPosition = polarToCartesian(Math.min(225 + t / 5, 200), t / 160 - 0.5);
-						if ((enemies[currentBoss.enemyId].HP <= 1100) || (t >= 2400)) {
-							for (let bulletId of Object.keys(bullets)) {
-								if (bullets[bulletId].mass === undefined) { // Do not affect damage particles.
-									delete bullets[bulletId];
+					if (!Bosses.lexan.attacks.S7.isIdle) {
+						if (Bosses.lexan.attacks.S7.currentPhase === 1) {
+							if ((enemies[currentBoss.enemyId].HP <= 1100) || (t >= 2400)) {
+								for (let bulletId of Object.keys(bullets)) {
+									if (bullets[bulletId].mass === undefined) { // Do not affect damage particles.
+										delete bullets[bulletId];
+									}
+								}
+								Bosses.lexan.attacks.S7.currentPhase = 2;
+								Bosses.lexan.attacks.S7.isIdle = true;
+								playAudio("se_tan00");
+								scheduleStageEvent(100, function() {
+									Bosses.lexan.attacks.S7.isIdle = false;
+								})
+								currentBoss.targetPosition[0] += 60;
+								return; // Prevent shots being fired this frame after other phase 1 bullets have been deleted.
+							}
+							// Processes Rin's shots.
+							let rinShotInterval = [100, 50, 48, 47][difficulty];
+							if (t % rinShotInterval === 0) {
+								playSingleAudio("se_tan00", "EN", "rinlexan" + frame, 0.3);
+								let rinShotSize = [8, 6, 8, 12][difficulty];
+								let rinShotSpeed = [0.9, 1.1, 1.3, 1.6][difficulty];
+								let principalAngle = Math.PI * 2 * 0.618 * frame / (rinShotSize * rinShotInterval) + randomReal(-0.1, 0.1);
+								for (let bulletNum = 0; bulletNum < rinShotSize; bulletNum++) {
+									let angle = principalAngle + Math.PI * 2 * bulletNum / rinShotSize;
+									let v = polarToCartesian(rinShotSpeed, angle);
+									createBullet(addVectors(enemies[this.rinId].position, polarToCartesian(24, angle)), function() {
+										this.position = addVectors(this.position, v);
+										if (this.transmissionsLeft > 0) {
+											if (Math.abs(this.position[0]) > 255) {
+												this.position[0] -= 510 * Math.sign(this.position[0]);
+												this.transmissionsLeft--;
+											} else if (Math.abs(this.position[1]) > 305) {
+												this.position[1] -= 610 * Math.sign(this.position[1]);
+												this.transmissionsLeft--;
+											}
+										}
+									}, arrowBulletRenderFunction("#ff9900", 5, angle), radialCollisionCheck(5), 270, 320, {transmissionsLeft: 1});
 								}
 							}
-							Bosses.lexan.attacks.S7.phase = 3; // 3 is identical to 0 (no attacks) except Rin moves to mirror Lexan.
-							scheduleStageEvent(100, function() {
-								Bosses.lexan.attacks.S7.phase = 2;
-							})
-							currentBoss.targetPosition[0] += 60;
-							return; // Prevent shots being fired this frame after other phase 1 bullets have been deleted.
-						}
-						// Processes Rin's shots.
-						let rinShotInterval = [100, 50, 48, 47][difficulty];
-						if (t % rinShotInterval === 0) {
-							playSingleAudio("se_tan00", "EN", "rinlexan" + frame, 0.3);
-							let rinShotSize = [8, 6, 8, 12][difficulty];
-							let rinShotSpeed = [0.9, 1.1, 1.3, 1.6][difficulty];
-							let principalAngle = Math.PI * 2 * 0.618 * frame / (rinShotSize * rinShotInterval) + randomReal(-0.1, 0.1);
-							for (let bulletNum = 0; bulletNum < rinShotSize; bulletNum++) {
-								let angle = principalAngle + Math.PI * 2 * bulletNum / rinShotSize;
-								let v = polarToCartesian(rinShotSpeed, angle);
-								createBullet(addVectors(enemies[this.rinId].position, polarToCartesian(24, angle)), function() {
-									this.position = addVectors(this.position, v);
-									if (this.transmissionsLeft > 0) {
-										if (Math.abs(this.position[0]) > 255) {
-											this.position[0] -= 510 * Math.sign(this.position[0]);
-											this.transmissionsLeft--;
-										} else if (Math.abs(this.position[1]) > 305) {
-											this.position[1] -= 610 * Math.sign(this.position[1]);
-											this.transmissionsLeft--;
+							// Processes Lexan's shots.
+							let lexanShotInterval = [100, 50, 48, 47][difficulty];
+							if (t % lexanShotInterval === 0) {
+								playSingleAudio("se_tan00", "EN", "rinlexan" + frame, 0.3);
+								let lexanShotSize = [4, 3, 4, 6][difficulty];
+								let reversalDistance = [500, 600, 700, 800][difficulty]; // The initial distance from the player that a bullet needs to be to be deflected. This decreases by 0.5 per frame.
+								let maxClosestApproachDistance = [240, 225, 210, 200][difficulty];
+								let lexanShotSpeed = [1.2, 1.4, 1.7, 2.1][difficulty];
+								let principalAngle = -Math.PI * 2 * 0.618 * frame / (lexanShotSize * lexanShotInterval) + randomReal(-0.1, 0.1);
+								for (let bulletNum = 0; bulletNum < lexanShotSize; bulletNum++) {
+									let angle = principalAngle + Math.PI * 2 * bulletNum / lexanShotSize;
+									let v = polarToCartesian(lexanShotSpeed, angle);
+									createBullet(addVectors(enemies[currentBoss.enemyId].position, polarToCartesian(24, angle)), function(t) {
+										let distanceToPlayer = Math.sqrt(squaredDistance(this.position, playerPosition));
+										if (this.canReverse && ((Math.abs(this.position[0]) > 250) || (Math.abs(this.position[1]) > 300))) {
+											v = polarToCartesian(lexanShotSpeed, angleToPlayer(this.position) + randomReal(-1, 1) * maxClosestApproachDistance / distanceToPlayer);
+											this.maximumX = Math.max(Math.abs(this.position[0]) + 10, 260);
+											this.maximumY = Math.max(Math.abs(this.position[1]) + 10, 310);
+											this.canReverse = false;
 										}
-									}
-								}, arrowBulletRenderFunction("#ff9900", 5, angle), radialCollisionCheck(5), 270, 320, {transmissionsLeft: 1});
+										this.position = addVectors(this.position, v);
+									}, circularRenderFunction(8, "#0000cc", "#0000ff"), radialCollisionCheck(8), 1500, 1500, {canReverse: true})
+								}
 							}
-						}
-						// Processes Lexan's shots.
-						let lexanShotInterval = [100, 50, 48, 47][difficulty];
-						if (t % lexanShotInterval === 0) {
-							playSingleAudio("se_tan00", "EN", "rinlexan" + frame, 0.3);
-							let lexanShotSize = [4, 3, 4, 6][difficulty];
-							let reversalDistance = [500, 600, 700, 800][difficulty]; // The initial distance from the player that a bullet needs to be to be deflected. This decreases by 0.5 per frame.
-							let maxClosestApproachDistance = [240, 225, 210, 200][difficulty];
-							let lexanShotSpeed = [1.2, 1.4, 1.7, 2.1][difficulty];
-							let principalAngle = -Math.PI * 2 * 0.618 * frame / (lexanShotSize * lexanShotInterval) + randomReal(-0.1, 0.1);
-							for (let bulletNum = 0; bulletNum < lexanShotSize; bulletNum++) {
-								let angle = principalAngle + Math.PI * 2 * bulletNum / lexanShotSize;
-								let v = polarToCartesian(lexanShotSpeed, angle);
-								createBullet(addVectors(enemies[currentBoss.enemyId].position, polarToCartesian(24, angle)), function(t) {
-									let distanceToPlayer = Math.sqrt(squaredDistance(this.position, playerPosition));
-									if (this.canReverse && ((Math.abs(this.position[0]) > 250) || (Math.abs(this.position[1]) > 300))) {
-										v = polarToCartesian(lexanShotSpeed, angleToPlayer(this.position) + randomReal(-1, 1) * maxClosestApproachDistance / distanceToPlayer);
-										this.maximumX = Math.max(Math.abs(this.position[0]) + 10, 260);
-										this.maximumY = Math.max(Math.abs(this.position[1]) + 10, 310);
-										this.canReverse = false;
-									}
-									this.position = addVectors(this.position, v);
-								}, circularRenderFunction(8, "#0000cc", "#0000ff"), radialCollisionCheck(8), 1500, 1500, {canReverse: true})
-							}
-						}
-					} else if (Bosses.lexan.attacks.S7.phase === 2) {
-						let mutualShotInterval = [100, 100, 90, 75][difficulty];
-						if (t % mutualShotInterval === 0) {
-							playSingleAudio("se_kira00", "EN", "rinlexan" + frame);
-							let shotSize = [12, 16, 24, 32][difficulty];
-							let radialSpeed = [1.6, 1.7, 1.8, 1.9][difficulty];
-							let angularSpeed = [0.06, 0.075, 0.085, 0.09][difficulty];
-							for (let rotationDirection of [1, -1]) {
-								let principalAngle = Math.PI * 2 * Math.random();
-								for (let isRin of [true, false]) {
-									for (let bulletNum = 0; bulletNum < shotSize; bulletNum++) {
-										let initialAngle = principalAngle + Math.PI * 2 * bulletNum / shotSize;
-										let rootPosition = structuredClone(enemies[isRin ? this.rinId : currentBoss.enemyId].position);
-										createBullet([300, 0], function(t) {
-											let radius = 48 + radialSpeed * t;
-											let angle = initialAngle + Math.log(radius + 100) * rotationDirection;
-											if (isRin) {
-												angle = Math.PI - angle;
-											}
-											this.position = addVectors(rootPosition, polarToCartesian(radius, angle));
-										}, circularRenderFunction(6, isRin ? "#cc8000" : "#0000cc", isRin ? "#ff9900" : "#0000ff"), radialCollisionCheck(6), 400, 400);
+						} else if (Bosses.lexan.attacks.S7.currentPhase === 2) {
+							let mutualShotInterval = [100, 100, 90, 75][difficulty];
+							if (t % mutualShotInterval === 0) {
+								playSingleAudio("se_kira00", "EN", "rinlexan" + frame);
+								let shotSize = [12, 16, 24, 32][difficulty];
+								let radialSpeed = [1.6, 1.7, 1.8, 1.9][difficulty];
+								let angularSpeed = [0.06, 0.075, 0.085, 0.09][difficulty];
+								for (let rotationDirection of [1, -1]) {
+									let principalAngle = Math.PI * 2 * Math.random();
+									for (let isRin of [true, false]) {
+										for (let bulletNum = 0; bulletNum < shotSize; bulletNum++) {
+											let initialAngle = principalAngle + Math.PI * 2 * bulletNum / shotSize;
+											let rootPosition = structuredClone(enemies[isRin ? this.rinId : currentBoss.enemyId].position);
+											createBullet([300, 0], function(t) {
+												let radius = 48 + radialSpeed * t;
+												let angle = initialAngle + Math.log(radius + 100) * rotationDirection;
+												if (isRin) {
+													angle = Math.PI - angle;
+												}
+												this.position = addVectors(rootPosition, polarToCartesian(radius, angle));
+											}, circularRenderFunction(6, isRin ? "#cc8000" : "#0000cc", isRin ? "#ff9900" : "#0000ff"), radialCollisionCheck(6), 400, 400);
+										}
 									}
 								}
 							}
 						}
 					}
-					if ((Bosses.lexan.attacks.S7.phase > 1) && (this.rinVerticalOffset < 1)) {
+					if ((Bosses.lexan.attacks.S7.currentPhase === 2) && (this.rinVerticalOffset < 1)) {
 						this.rinVerticalOffset = Math.min(this.rinVerticalOffset * 1.03 + 0.04, 1);
 					}
 				}
@@ -1226,12 +1241,10 @@ export const Bosses = {
 						} else if (T === 2450) {
 							this.collapseStart = structuredClone(this.position);
 							this.collapseCentre = structuredClone(playerPosition);
-						} else if (T < 3200) {
+						} else {
 							let collapseTime = [175, 150, 125, 100][difficulty];
 							this.position[0] = this.collapseStart[0] + (this.collapseCentre[0] - this.collapseStart[0]) * ((T - 2450) / collapseTime) ** 2;
 							this.position[1] = this.collapseStart[1] + (this.collapseCentre[1] - this.collapseStart[1]) * ((T - 2450) / collapseTime) ** 2;
-						} else { // Special case if `collapseStart` and `collapseCentre` are the same, causing the wall to never move at all.
-							this.position[0] = 10000;
 						}
 					}, circularRenderFunction(4, "#cccccc", "#ffffff"), radialCollisionCheck(4), (startVelocityX === 0) ? 900 : 270, (startVelocityY === 0) ? 900 : 320, {indestructible: true});
 				},
@@ -1384,6 +1397,7 @@ export const Bosses = {
 				dropList: {},
 				maxFrames: 9860,
 				slowDefeat: true,
+				totalPhases: 4,
 				phaseTransitions: { // Only one of these needs to be met for the next phase to start - i.e. either this section of the health bar must be reached or the current phase is timed out.
 					HP: [7500, 5500, 3000],
 					frames: [1860, 3860, 6360] // 160, 120 and 70 seconds left.
@@ -1556,7 +1570,7 @@ export const Bosses = {
 					}
 				}
 			},
-/*			S11: {
+			S11: {
 				name: "\"Omelette Au Fromage Hon Hon Hon Oui Oui Oui Je Parle France Tres Bien Mon Ami\"",
 				HP: 10000,
 				guaranteedScore: 0,
@@ -1564,11 +1578,12 @@ export const Bosses = {
 				dropList: {},
 				maxFrames: 15400,
 				behaviourFunction: function(t) {
+					currentBoss.targetPosition = [0, 30];
 					if (t === 1) {
 						createBullet([0, 0], function() {}, circularRenderFunction(20, "#990000", "#ff0000"), radialCollisionCheck(20));
 					}
 				}
-			} */
+			}
 		}
 	},
 	rin: {
@@ -1908,7 +1923,7 @@ export const dialogueList = {
 		onAdvance: function() {
 			endCutscene();
 			currentDialogueId = undefined;
-//			skipPhases(9);
+//			skipPhases(6);
 		}
 	},
 	// Lexan's post-fight dialogue

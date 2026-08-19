@@ -6,7 +6,7 @@ export const BGMNode = audioContext.createGain(); // Use this node to be able to
 // Stores all audio which may be played as a `buffer` to be passed to `playAudio`.
 const audio = {};
 // Lists all the audio files which must be loaded by their file name (excluding the file ending).
-export const requiredAudio = ["bgm_boss", "bgm_ending", "bgm_stage", "bgm_title", "se_big", "se_bonus", "se_boon00", "se_boon01", "se_cancel00", "se_cardget", "se_cat00", "se_ch00", "se_ch02", "se_damage00", "se_don00", "se_enep00", "se_enep01", "se_enep02", "se_etbreak", "se_extend", "se_fault", "se_graze", "se_invalid", "se_item00", "se_kira00", "se_lazer00", "se_lgods1", "se_lgods2", "se_lgods4", "se_nep00", "se_ok00", "se_pause", "se_pldead00", "se_pldead01", "se_plst00", "se_power0", "se_power1", "se_powerup", "se_select00", "se_tan00", "se_timeout"];
+export const requiredAudio = ["bgm_boss", "bgm_ending", "bgm_stage", "bgm_title", "se_big", "se_bonus", "se_boon00", "se_boon01", "se_cancel00", "se_cardget", "se_cat00", "se_ch00", "se_ch02", "se_damage00", "se_don00", "se_enep00", "se_enep01", "se_enep02", "se_etbreak", "se_extend", "se_fault", "se_graze", "se_heal", "se_invalid", "se_item00", "se_kira00", "se_lazer00", "se_lgods1", "se_lgods2", "se_lgods4", "se_nep00", "se_ok00", "se_pause", "se_pldead00", "se_pldead01", "se_plst00", "se_power0", "se_power1", "se_powerup", "se_select00", "se_tan00", "se_timeout"];
 // We store this to be able to calculate how many files have been loaded for the loading screen.
 export var audioFilesLoaded = 0;
 // Retrieves a `buffer` for `playAudio` given a file path (e.g. "assets/audio/stage.mp3").
@@ -21,7 +21,7 @@ function playAudioFromBuffer(buffer, type, volume = 1) {
   let source = audioContext.createBufferSource();
   source.buffer = buffer;
   let gainNode = audioContext.createGain();
-  gainNode.gain.value = volume * persistentData.settings.volume.masterVolume * (persistentData.settings.volume[type] ?? 1);
+  gainNode.gain.value = volume * (persistentData.settings.volume.masterVolume * (persistentData.settings.volume[type] ?? 1)) ** 3;
   gainNode.connect(audioContext.destination);
   source.connect(gainNode);
   source.start();
@@ -39,7 +39,7 @@ function playBGMFromBuffer(buffer, loopStart, loopEnd, startTime = 0) {
   source.loopStart = loopStart;
   source.loopEnd = loopEnd;
   let gainNode = audioContext.createGain();
-  gainNode.gain.value = persistentData.settings.volume.masterVolume * persistentData.settings.volume.BGM;
+  gainNode.gain.value = (persistentData.settings.volume.masterVolume * persistentData.settings.volume.BGM) ** 3;
   BGMNode.connect(audioContext.destination);
   source.connect(BGMNode);
   source.start(0, startTime);
@@ -81,6 +81,11 @@ export function stopBGM() {
   }
 }
 const singleAudioObject = {};
+export function clearSingleAudio() { // This must be done after a game otherwise some sounds will fail to play later.
+  for (let id of Object.keys(singleAudioObject)) {
+    delete singleAudioObject[id];
+  }
+}
 export function playSingleAudio(id, type, label, volume = 1) { // If multiple objects may cause the same audio to be played many times in one frame, pass them here, and only the first instance of a label that gets passed in a given frame will play audio.
   if (singleAudioObject[label] === undefined) {
     singleAudioObject[label] = true;

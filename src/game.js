@@ -1,4 +1,4 @@
-import { activeBGMProperties, pauseBGM, playAudio, playBGM, playSingleAudio, stopBGM, unpauseBGM } from "./audio.js";
+import { activeBGMProperties, clearSingleAudio, pauseBGM, playAudio, playBGM, playSingleAudio, stopBGM, unpauseBGM } from "./audio.js";
 import { advanceDialogue, Bosses, clearCurrentDialogue, currentDialogueId, currentDialogueOpenTime, dialogueList } from "./boss_data.js";
 import { hsltohex } from "./color_converter.js";
 import { activeKeys, openMainMenu, openMenuWindow } from "./menu.js";
@@ -58,6 +58,7 @@ export function startGame(difficultySetting) {
 	gameClockId = setInterval(gameClock, 10);
 	// Clears all the stage data in case this is a replay.
 	resetStageData();
+	clearSingleAudio();
 	playerPosition[0] = 0;
 	playerPosition[1] = 250;
 	// Update the sidebar for the first time.
@@ -85,7 +86,7 @@ export function endGame(overrideScreenChange) {
 		persistentData.spellCardsSeen[i] = Math.max(persistentData.spellCardsSeen[i], totalSpellCardsSeen);
 	}
 	savePersistentData();
-	clearScreen(false);
+	clearScreen(false, false);
 	for (let itemId of Object.keys(items)) {
 		delete items[itemId];
 	}
@@ -231,13 +232,16 @@ const itemCollectionFunctions = {
 	},
 	bombpiece: function() {
 		if (bombs % 3 === 2) {
-			playAudio("se_extend", "PL");
+			playAudio("se_cardget", "PL");
 		}
 		bombs++
 	},
 	spellcard: function() {
 		playAudio("se_cardget", "PL");
 		bombs += 3;
+	},
+	deletedbullet: function() {
+		score += 10;
 	}
 };
 // A list of all the items currently present.
@@ -263,7 +267,7 @@ function inflateDropList(list) {
 export function processEnemyDrops(enemyPosition, dropList) {
 	let inflatedList = inflateDropList(dropList);
 	if (inflatedList.length === 1) { // Special case - if only one item, create it at the exact position.
-		createItem(enemyPosition, inflatedList[0]);
+		createItem(structuredClone(enemyPosition), inflatedList[0]);
 		return;
 	}
 	let largeDrops = inflatedList.filter(x => !["point", "power"].includes(x));
@@ -351,6 +355,8 @@ export function useBomb() {
 export function useContinue() {
 	// If no continues are left, the function corresponding to the continue button gets replaced with undefined so the appropriate sound is played.
 	// Thus, we do not check if any continues are left here.
+	updateRecord("highScore", score, "max");
+	document.getElementById("sidebar_hiscore").innerText = formatInteger(Math.min(persistentData[checkUpgradeless() ? "upgradelessRecords" : "records"].highScore[difficulty], 999999999));
 	processVirtueGain();
 	continuesLeft--;
 	score = 3 - continuesLeft;
@@ -409,7 +415,7 @@ export function positionCoveredByBomb(vector, bombAngles = bombIsActive() ? play
 }
 export var isInCutscene = false;
 export function beginCutscene() {
-	clearScreen(true);
+	clearScreen(true, true);
 	isInCutscene = true;
 	lastBomb = -999; // Clear any bomb which is on the screen.
 }
@@ -423,6 +429,7 @@ export const currentBoss = {
 	isInSpellCard: false,
 	targetPosition: [-250, -300],
 	currentAttackTime: 0,
+	initialCAT: 0, // The value that `currentAttackTime` is initialised to. This will only be different from 0 if a bomb is used less than 4 seconds before an attack starts, and is only used to show the boss health bar properly.
 }
 // Creates a boss.
 export function createBoss(id) {
@@ -452,7 +459,7 @@ function nextBossPhaseId(id) {
 export function startBossPhase(currentPhaseId) { // `phaseId` is "Nn" for the nth nonspell and "Sn" for the nth spell card.
 	let nextId = nextBossPhaseId(currentPhaseId);
 	if (nextId === "END") { // Ends the boss fight.
-		clearScreen(Bosses[currentBoss.bossId].autocollectAtEnd);
+		clearScreen(Bosses[currentBoss.bossId].autocollectAtEnd, true);
 		currentBoss.bossId = undefined;
 		document.getElementById("div_bossSpellCard").style.opacity = 0;
 		playAudio("se_enep01", "EN");
@@ -460,19 +467,20 @@ export function startBossPhase(currentPhaseId) { // `phaseId` is "Nn" for the nt
 		let bossData = Bosses[currentBoss.bossId];
 		let nextAttackData = bossData.attacks[nextId];
 		let position = enemies[currentBoss.enemyId]?.position ?? currentBoss.targetPosition;
-		clearScreen((currentPhaseId === "S0") && bossData.autocollectAtStart); // Clear before creating the boss or the boss gets deleted. Autocollect only at the start of the boss fight.
+		clearScreen((currentPhaseId === "S0") && bossData.autocollectAtStart, true); // Clear before creating the boss or the boss gets deleted. Autocollect only at the start of the boss fight.
 		currentBoss.enemyId = enemyCounter;
 		// We apply a blank behaviour function and run the boss's actual behaviour function in the main loop.
 		createEnemy(position, function() {}, bossData.renderFunction, bossData.collisionCheckFunction, nextAttackData.isSurvival ? Number.MIN_VALUE : nextAttackData.HP);
 		enemies[currentBoss.enemyId].damageModifier = nextAttackData.isSurvival ? 0 : 0.1; // Every boss has 90% damage reduction for the first 2 seconds of each phase. We set this to 0% within the game loop.
 		currentBoss.phase = Number(nextId.substring(1));
 		currentBoss.isInSpellCard = nextId[0] === "S";
-		currentBoss.currentAttackTime = 0;
+		currentBoss.initialCAT = Math.min(0, frame - lastBomb - 200); // If a bomb will last more than 2 seconds in this spell card, add extra time and invincibility frames to the boss. This allows the spell to not auto-fail while not having a working bomb during it either.
+		currentBoss.currentAttackTime = currentBoss.initialCAT;
 		document.getElementById("div_bossSpellCard").style.opacity = 0;
 		document.getElementById("div_bossSpellCard").innerText = "";
 		if (currentBoss.isInSpellCard) {
 			totalSpellCardsSeen++;
-			scheduleUnclearableStageEvent(25, function() { // Give potential previous spell card time to disappear.
+			scheduleUnclearableStageEvent(25 - currentBoss.currentAttackTime, function() { // Give potential previous spell card time to disappear.
 				playAudio("se_cat00", "EN");
 				document.getElementById("div_bossSpellCard").innerText = Bosses[currentBoss.bossId].attacks[nextId].name;
 				document.getElementById("div_bossSpellCard").style.opacity = 1;
@@ -487,7 +495,7 @@ var totalSpellCardsCaptured = 0;
 // Whether a spell card can be captured.
 export function canGetSpellCard() {
 	let attackStartTime = frame - currentBoss.currentAttackTime;
-	return (lastMiss < attackStartTime) && ((lastBomb + 350) < attackStartTime); // Must not have missed or been under the effect of a bomb during the current card.
+	return (lastMiss < attackStartTime) && (lastBomb < attackStartTime); // Must not have missed or been under the effect of a bomb beyond the first 2 seconds of this spell card.
 }
 // Calculates the score bonus for the current spell card.
 export function spellCardBonus() {
@@ -526,8 +534,11 @@ export function stageClearBonus() {
 	});
 }
 // Removes all bullets and enemies, and autocollects all items at the start and end of a boss fight.
-export function clearScreen(autocollect) {
+export function clearScreen(autocollect, rewardBullets) {
 	for (let bulletId of Object.keys(bullets)) {
+		if (rewardBullets) {
+			createItem(structuredClone(bullets[bulletId].position), "deletedbullet");
+		}
 		delete bullets[bulletId];
 	}
 	for (let playerBulletId of Object.keys(playerBullets)) {
@@ -586,13 +597,9 @@ function processFrame() {
 		if (activeKeys.arrowdown) {
 			velocity[1]++
 		}
-		console.log(playerPosition);
 		playerPosition = addVectors(playerPosition, normalizeVector(velocity, speed));
-		console.log(playerPosition);
 		 // 6 pixels less than screen size to prevent hitbox being halfway out.
 		playerPosition = clampVector(playerPosition, -244, 244, -294, 294);
-		console.log(playerPosition);
-		console.log("T");
 	}
 	if (currentBoss.bossId !== undefined) {
 		enemies[currentBoss.enemyId].position = addVectors(multiplyVectors(enemies[currentBoss.enemyId].position, 0.95), multiplyVectors(currentBoss.targetPosition, 0.05));
@@ -637,7 +644,7 @@ function processFrame() {
 						if (canGetSpellCard() && potentialCapture) { // If the spell card is captured
 							score += spellCardBonus();
 							totalSpellCardsCaptured++;
-							document.getElementById("div_bossSpellCaptureText").innerText = "Get Spell Card!"
+							document.getElementById("div_bossSpellCaptureText").innerText = "Get Spell Card!\n" + formatInteger(spellCardBonus());
 							playAudio("se_cardget", "EN");
 						} else {
 							document.getElementById("div_bossSpellCaptureText").innerText = "Bonus Failed..."
@@ -646,7 +653,7 @@ function processFrame() {
 						document.getElementById("div_bossSpellCaptureText").style.opacity = 1;
 						setTimeout(function() {
 							document.getElementById("div_bossSpellCaptureText").style.opacity = 0;
-						}, 800); // Not stage event in case game is quit in this time.
+						}, 1800); // Not stage event in case game is quit in this time.
 					}
 					score += attackData.guaranteedScore;
 					processEnemyDrops(enemyData.position, attackData.dropList);
@@ -802,7 +809,7 @@ function processFrame() {
 		if (playerPosition[1] < (upgradeEffectValues.lowerAutocollect - 300)) { // Process autocollection
 			items[id].autocollect = true;
 		}
-		if (items[id].autocollect || isInCutscene) {
+		if (items[id].autocollect || (items[id].type === "deletedbullet") || isInCutscene) {
 			items[id].position = addVectors(items[id].position, polarToCartesian(12, angleToPlayer(items[id].position)));
 		} else { // 0.05 px s^-2 acceleration from gravity (downwards) and 0.005v^2 px s^-2 acceleration from drag (opposes motion).
 			items[id].velocity += items[id].velocity * Math.abs(items[id].velocity) * -0.015 + 0.1;
@@ -813,7 +820,7 @@ function processFrame() {
 			delete items[id];
 		} else if (dist < 100) {
 			itemCollectionFunctions[items[id].type]();
-			playAudio("se_item00", "PL");
+			playAudio("se_item00", "PL", (items[id].type === "deletedbullet") ? 0.01 : 1);
 			delete items[id];
 		} else if (dist < (["point", "power"].includes(items[id].type) ? 2500 : (items[id].type === "fullpower") ? 4225 : 6400)) { // Collection radius is 50px for point and power items, 65px for full power and 80px for large items.
 			items[id].autocollect = true;

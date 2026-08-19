@@ -1,5 +1,5 @@
 /*
-Adapted from xhwzwka's Color Converter.
+Adapted from xhwzwka's Color Converter. They're such a lifesaver~
 https://xhwzwka.github.io/Color-Converter/
 */
 
@@ -29,8 +29,20 @@ export function rgbtohex(r,g,b) {
 	}
 
 	var hex = "#"+rh+gh+bh;
-	return [hex];
+	return hex;
 }
+
+function hextorgb(hex) {
+	var r = hex.substr(1,2);
+	var g = hex.substr(3,2);
+	var b = hex.substr(5,2);
+
+	r = parseInt(r,16);
+	g = parseInt(g,16);
+	b = parseInt(b,16);
+	return [r,g,b];
+}
+
 
 function hsltorgb(h,s,l) {
 	h = modulo(h, 360);
@@ -78,5 +90,17 @@ function hsltorgb(h,s,l) {
 }
 
 export function hsltohex(h, s, l) {
-	return rgbtohex(...hsltorgb(h, s, l))[0];
+	return rgbtohex(...hsltorgb(h, s, l));
+}
+
+// The below code is alemaninc's original.
+
+// Blends a `proportion` of `color1` with `color2`.
+export function hexBlend(color1, proportion, color2) {
+	let rgb1 = hextorgb(color1);
+	let rgb2 = hextorgb(color2);
+	let r = rgb1[0] * proportion + rgb2[0] * (1 - proportion);
+	let g = rgb1[1] * proportion + rgb2[1] * (1 - proportion);
+	let b = rgb1[2] * proportion + rgb2[2] * (1 - proportion);
+	return rgbtohex(r, g, b);
 }

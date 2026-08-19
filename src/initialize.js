@@ -27,12 +27,12 @@ function initialiseSettings() {
 			savePersistentData();
 		});
 	}
-	BGMNode.gain.value = persistentData.settings.volume.masterVolume * persistentData.settings.volume.BGM;
+	BGMNode.gain.value = (persistentData.settings.volume.masterVolume * persistentData.settings.volume.BGM) ** 3;
 	for (let soundType of ["masterVolume", "BGM"]) {
 		document.getElementById("input_settings_volume_" + soundType).addEventListener("input", function() { // Smoothly changes BGM volume.
 			BGMNode.gain.cancelScheduledValues(audioContext.currentTime);
 			BGMNode.gain.setValueAtTime(BGMNode.gain.value, audioContext.currentTime);
-			BGMNode.gain.linearRampToValueAtTime(persistentData.settings.volume.masterVolume * persistentData.settings.volume.BGM, audioContext.currentTime + 0.25);
+			BGMNode.gain.linearRampToValueAtTime((persistentData.settings.volume.masterVolume * persistentData.settings.volume.BGM) ** 3, audioContext.currentTime + 0.25);
 		})
 	};
 }

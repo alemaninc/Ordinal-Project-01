@@ -27,7 +27,7 @@ function createYinYangOrb(targetPosition, streamingBulletMinTime, streamingBulle
 			}
 			let vx = streamingBulletSpeed * Math.cos(angle);
 			let vy = streamingBulletSpeed * Math.sin(angle);
-			createBullet(this.position, function(t) {
+			createBullet(structuredClone(this.position), function(t) {
 				this.position[0] += vx;
 				this.position[1] += vy;
 			}, circularRenderFunction(6, "#ccccff", "#ffffff", undefined, false), radialCollisionCheck(6));
@@ -618,6 +618,8 @@ function createRedSpirit(initialAngle, angularDirection, verticalOffset) {
 			}, circularRenderFunction(7, this.outerColor, this.innerColor), radialCollisionCheck(7));
 		}
 		if (t === 450) {
+			this.maximumX = 400;
+			this.maximumY = 400 + Math.abs(verticalOffset);
 			playSingleAudio("se_boon01", "EN", "redSpiritTransition" + frame, 0.75);
 		}
 		if (t >= 450) { // This is when the red spirits become damageable and start shooting secondary bullets.
@@ -739,7 +741,7 @@ function createYellowSpirit(targetPosition) {
 // The magma elementals that shoot singular explosive bullets which create pillars of lava when they reach the bottom of the screen, and then random rings of fire bullets.
 // Fire starts shooting at the moment that the explosive reaches the ground and creates a magma pillar.
 var magmaElementalsDefeated = 0;
-function createMagmaElemental(targetPosition) {
+export function createMagmaElemental(targetPosition) {
 	createEnemy([targetPosition[0], -360], function(t) {
 		if (t <= 420) {
 			this.position[1] = this.position[1] * 0.97 + targetPosition[1] * 0.03;
@@ -1004,7 +1006,7 @@ export function scheduleUnclearableStageEvent(time, func) {
 }
 export const stageEvents = { // The usual stage effects are such that no more than one function is run per frame, but events scheduled by enemies may be scheduled for the same frame which is why an array is used.
 	10: function() {
-//		skipFrames(16900);
+//		skipFrames(15000);
 	},
 	100: function() {
 		playBGM("bgm_stage", 368, 389.8);
@@ -1233,7 +1235,6 @@ export const stageEvents = { // The usual stage effects are such that no more th
 			createYinYangOrbVariantCWave(4, 13650);
 		}
 	},
-	// Latest possible Zenryaku end time is frame 13375.
 	13480: function() {
 		if (Bosses.zenryaku.frameDefeated < 13455) {
 			createYinYangOrbVariantCWave(4, 13675);
@@ -1244,9 +1245,10 @@ export const stageEvents = { // The usual stage effects are such that no more th
 			createYinYangOrbVariantCWave(4, 13700);
 		}
 	},
-	13775: function() {
-		createMagmaElemental([0, -200]);
-	},
+	// Latest possible Zenryaku end time is frame 13975.
+	// A magma elemental is ordinarily spawned at frame 13775. However, if all 3 of Zenryaku's spell cards are started with bombs active, this can be while Zenryaku is still active.
+	// We will thus delay this magma elemental's spawn until 0.5s after Zenryaku is defeated.
+	// The easiest way to do this is to just schedule it at the frame when Zenryaku is defeated, thus this has been done.
 	14400: function() {
 		let initialOrientation = plusMinus1();
 		magmaElementalExplosiveShot([60 * initialOrientation, -350], 0, initialOrientation);
@@ -1322,7 +1324,8 @@ export function resetStageData() {
 	Bosses.lexan.attacks.S4.chargeAngle = 0;
 	Bosses.lexan.attacks.S4.chargeAngularSpeed = 0;
 	Bosses.lexan.attacks.S7.rinVerticalOffset = -1;
-	Bosses.lexan.attacks.S7.phase = 0;
+	Bosses.lexan.attacks.S7.currentPhase = 1;
+	Bosses.lexan.attacks.S7.isIdle = true;
 	Bosses.lexan.attacks.N8.rotationDirection = plusMinus1();
 	Bosses.lexan.attacks.S9.nextShardPosition = [220 * plusMinus1(), 270 * plusMinus1()];
 	Bosses.lexan.attacks.S10.slowDefeat = true;
