@@ -249,7 +249,7 @@ export const items = {};
 // The number of items that have been spawned during the game.
 var itemCounter = 0;
 // Creates an item. We pass slightly different parameters to those for creating bullets and enemies as all items have a common motion function.
-function createItem(position, type) {
+export function createItem(position, type) {
 	items[itemCounter] = {position, type, velocity: -3, autocollect: false, id: itemCounter};
 	itemCounter++;
 }
@@ -609,6 +609,7 @@ function processFrame() {
 		}
 	}
 	if (!isInCutscene) { // In cutscenes, we do not run any enemy or bullet behaviour.
+		let playerCanBeDamaged = ((frame - lastMiss) > 125) && (frame - lastBomb > 350);
 		// Run the behaviour of all enemies.
 		let grazesThisFrame = 0;
 		let collisionThisFrame = false;
@@ -729,8 +730,13 @@ function processFrame() {
 				collisionThisFrame = true;
 				continue bulletLoop;
 			} else if ((collisionValue === 1) && (frame >= bullets[id].nextGraze)) {
-				grazesThisFrame++;
-				bullets[id].nextGraze = frame + 10;
+				if (playerCanBeDamaged || bullets[id].indestructible) { // If the player is not invincible or this bullet is indestructible, add graze, otherwise delete bullets on grazing.
+					grazesThisFrame++;
+					bullets[id].nextGraze = frame + 10;
+				} else {
+					createItem(structuredClone(bullets[id].position), "deletedbullet");
+					delete bullets[id];
+				}
 			}
 		}
 		let playerBulletIds = Object.keys(playerBullets);
@@ -752,11 +758,11 @@ function processFrame() {
 		pointValue += grazesThisFrame * 50;
 		// If there was a collision between a player and a bullet or enemy, add a miss.
 		// If no bomb happens in the next 0.1s, remove a life and reset enemy bullets and the player's position, otherwise add graze.
-		if (collisionThisFrame && ((frame - lastMiss) > 125) && (frame - lastBomb > 350)) { // Misses must be at least 2s apart, and cannot happen during a bomb or within 1s of after a bomb.
+		if (collisionThisFrame && playerCanBeDamaged) { // Misses must be at least 2s apart, and cannot happen during a bomb or within 1s of after a bomb.
 			playAudio("se_pldead00", "PL");
 			lastMiss = frame;
 		}
-		if ((frame - lastMiss === 5) && (!bombActive)) {
+		if ((frame - lastMiss === 25) && (!bombActive)) {
 			if (lives < 3) {
 				openMenuWindow("gameOver");
 				document.getElementById("button_gameOver_continueGame").innerText = "Continue (" + continuesLeft + " left)";
@@ -764,21 +770,19 @@ function processFrame() {
 				pauseBGM();
 				gameOverScreenActive = true;
 			} else {
-				scheduleStageEvent(20, function() {
-					let lostPower = Math.floor(Math.min(power - 100, power * 0.1));
-					power -= lostPower;
-					for (let i = 0; i < Math.min(lostPower, 7); i++) {
-						createItem(addVectors(playerPosition, polarToCartesian(90, bearingToAngle(-30 + i * 10))), "power");
+				let lostPower = Math.floor(Math.min(power - 100, power * 0.1));
+				power -= lostPower;
+				for (let i = 0; i < Math.min(lostPower, 7); i++) {
+					createItem(addVectors(playerPosition, polarToCartesian(90, bearingToAngle(-30 + i * 10))), "power");
+				}
+				lives -= 3;
+				bombs = Math.max(bombs, upgradeEffectValues.startingBombs); // Replenishes bombs to 2 full bombs (possibly more with upgrades).
+				for (let id of Object.keys(bullets)) {
+					if (!bullets[id].indestructible) {
+						delete bullets[id];
 					}
-					lives -= 3;
-					bombs = Math.max(bombs, upgradeEffectValues.startingBombs); // Replenishes bombs to 2 full bombs (possibly more with upgrades).
-					for (let id of Object.keys(bullets)) {
-						if (!bullets[id].indestructible) {
-							delete bullets[id];
-						}
-					}
-					playerPosition = [0, 250];
-				});
+				}
+				playerPosition = [0, 250];
 			}
 		}
 	}

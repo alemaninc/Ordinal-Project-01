@@ -304,7 +304,7 @@ export function drawCanvas() {
 		document.getElementById("canvasBackground").style.backgroundPosition = backgroundData.position;
 		document.getElementById("canvasBackground").style.transform = ((currentBoss.bossId === "zenryaku") && currentBoss.isInSpellCard && (currentBoss.currentAttackTime > 25)) ? ("rotate(" + ((frame / 2) % 360) + "deg)") : "";
 	}
-	if (numberIsBounded(0, frame - lastMiss, 25) && (lives >= 3)) { // Draw a red circle around the player during the death animation, unless this is the last life (in which case the continue menu appears).
+	if (numberIsBounded(0, frame - lastMiss, 25)) { // Draw a red circle around the player during the death animation.
 		let animationProgress = frame - lastMiss;
 		drawCircle(playerPosition, animationProgress * 28, "#00000000", "#ff0000" + (125 - animationProgress * 5).toString(16).padStart(2, "0"))
 	}
@@ -426,7 +426,7 @@ export function drawCanvas() {
 		document.getElementById("div_bossPositionIndicator").style.color = Bosses[currentBoss.bossId].color;
 		document.getElementById("div_bossPositionIndicator").style.left = (enemies[currentBoss.enemyId].position[0] + 245) + "px";
 		if (currentBoss.phase === 7) { // Rin's attacks
-			document.getElementById("div_bossPositionIndicator2").style.opacity = currentBoss.isInSpellCard ? 1 : clampNumber(0, currentBoss.currentAttackTime / 25 - 1, 1);
+			document.getElementById("div_bossPositionIndicator2").style.opacity = currentBoss.isInSpellCard ? 1 : clampNumber(0, currentBoss.currentAttackTime / 25 - 2, 1);
 			document.getElementById("div_bossPositionIndicator2").style.color = "#cc8000";
 			document.getElementById("div_bossPositionIndicator2").style.left = (enemies[Bosses.lexan.attacks[currentBoss.isInSpellCard ? "S7" : "N7"].rinId].position[0] + 245) + "px";
 		} else {

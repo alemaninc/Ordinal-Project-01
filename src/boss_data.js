@@ -1,6 +1,6 @@
 import { playAudio, playBGM, playSingleAudio, stopBGM } from "./audio.js";
 import { hsltohex } from "./color_converter.js";
-import { angleToObject, angleToPlayer, bearingToAngle, beginCutscene, bombIsActive, bullets, continuesLeft, createBoss, createBullet, createEnemy, currentBoss, difficulty, endCutscene, endGame, enemies, enemyCounter, frame, isInCutscene, playerBullets, playerPosition, radialCollisionCheck, rectangularCollisionCheck, skipPhases, stageClearBonus } from "./game.js"
+import { angleToObject, angleToPlayer, bearingToAngle, beginCutscene, bombIsActive, bullets, clearScreen, continuesLeft, createBoss, createBullet, createEnemy, createItem, currentBoss, difficulty, endCutscene, endGame, enemies, enemyCounter, frame, isInCutscene, playerBullets, playerPosition, radialCollisionCheck, rectangularCollisionCheck, skipPhases, stageClearBonus } from "./game.js"
 import { openEnding, openMenuWindow } from "./menu.js";
 import { processVirtueGain } from "./persistent_data.js";
 import { createMagmaElemental, scheduleStageEvent, scheduleUnclearableStageEvent } from "./stage_events.js";
@@ -115,10 +115,9 @@ export const Bosses = {
 						this.currentSmallColour = newColour;
 						let bulletIds = Object.keys(bullets);
 						for (let bulletId of bulletIds) {
-							if (bullets[bulletId].colour !== undefined) { // Damage particles may also be present.
-								bullets[bulletId].renderFunction = circularRenderFunction((bullets[bulletId].colour === this.currentSmallColour) ? 0 : 20, this.outerColors[bullets[bulletId].colour], this.innerColors[bullets[bulletId].colour]);
-								bullets[bulletId].collisionCheckFunction = radialCollisionCheck((bullets[bulletId].colour === this.currentSmallColour) ? 0 : 20);
-							}
+							let opacity = (bullets[bulletId].colour === this.currentSmallColour) ? "19" : "ff"
+							bullets[bulletId].renderFunction = circularRenderFunction(20, this.outerColors[bullets[bulletId].colour] + opacity, this.innerColors[bullets[bulletId].colour] + opacity);
+							bullets[bulletId].collisionCheckFunction = radialCollisionCheck((bullets[bulletId].colour === this.currentSmallColour) ? 0 : 20);
 						}
 					}
 				}
@@ -255,7 +254,7 @@ export const Bosses = {
 									this.position[0] += vx;
 									vy += 0.002;
 									this.position[1] += vy;
-								}, circularRenderFunction(4, "#00cccc", "#00cccc", 1), radialCollisionCheck(4))
+								}, circularRenderFunction(4, "#00cccc80", "#00cccc", 1), radialCollisionCheck(4))
 							}
 						} else {
 							// At the start of each pair of vertical waves, move randomly.
@@ -282,7 +281,7 @@ export const Bosses = {
 									this.position[0] += vx;
 									vy += 0.002;
 									this.position[1] += vy;
-								}, circularRenderFunction(4, "#00cccc", "#00cccc", 1), radialCollisionCheck(4))
+								}, circularRenderFunction(4, "#00cccc80", "#00cccc", 1), radialCollisionCheck(4))
 							}
 						}
 					}
@@ -922,8 +921,10 @@ export const Bosses = {
 				rinId: undefined, // The enemy ID of the second Lexan.
 				behaviourFunction: function(t) {
 					if (t === 1) {
-						playAudio("se_heal");
 						currentBoss.targetPosition = clampVector(currentBoss.targetPosition, 150, 200, -200, -100);
+					}
+					if (t === 26) {
+						playAudio("se_heal");
 						this.rinId = enemyCounter;
 						createEnemy([500, -300], function() {
 							// This enemy does nothing except transfer his damage to Lexan and mirror his position. The behaviour of the two attack-wise is controlled by the general boss behaviour function.
@@ -993,9 +994,8 @@ export const Bosses = {
 						if (Bosses.lexan.attacks.S7.currentPhase === 1) {
 							if ((enemies[currentBoss.enemyId].HP <= 1100) || (t >= 2400)) {
 								for (let bulletId of Object.keys(bullets)) {
-									if (bullets[bulletId].mass === undefined) { // Do not affect damage particles.
-										delete bullets[bulletId];
-									}
+									createItem(structuredClone(bullets[bulletId].position), "deletedbullet");
+									delete bullets[bulletId];
 								}
 								Bosses.lexan.attacks.S7.currentPhase = 2;
 								Bosses.lexan.attacks.S7.isIdle = true;
@@ -1485,7 +1485,7 @@ export const Bosses = {
 							for (let fieldParticle = randomReal(0, 1); fieldParticle < fieldStrength / 1000; fieldParticle++) {
 								createBullet(addVectors(this.position, randomPolarVector(150)), function() {}, circularRenderFunction(3, "#0000cc", "#0000ff"), radialCollisionCheck(3), 1000, 1000, {indestructible: true, velocity: [0, 0], mass: 1});
 							}
-						}, blackHoleRenderFunction, this.blackHoleCollisionCheck, 260, 310, {massive: true, indestructible: true, radius: 6});
+						}, blackHoleRenderFunction, this.blackHoleCollisionCheck, 260, 310, {indestructible: true, radius: 6});
 					}
 					// Phase 1. Spawns random bullets with random velocities off the screen.
 					if (100 < t) {
@@ -1551,7 +1551,7 @@ export const Bosses = {
 								createBullet(structuredClone(bossPosition), function(t) {
 									this.velocity = addVectors(this.velocity, multiplyVectors(startingVelocity, -0.005)); // Air resistance
 									if (t === 90) {
-										playAudio("se_kira00", "EN", 1);
+										playSingleAudio("se_kira00", "EN", "emdphase4explode" + frame, 1);
 										let principalAngle = Math.PI * 2 * Math.random();
 										for (let bulletNum = 0; bulletNum < phase4RingSize; bulletNum++) {
 											let angle = principalAngle + Math.PI * 2 * bulletNum / phase4RingSize;
@@ -1923,7 +1923,7 @@ export const dialogueList = {
 		onAdvance: function() {
 			endCutscene();
 			currentDialogueId = undefined;
-//			skipPhases(6);
+			skipPhases(6);
 		}
 	},
 	// Lexan's post-fight dialogue
