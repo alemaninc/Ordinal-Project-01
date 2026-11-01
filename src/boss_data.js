@@ -5,7 +5,7 @@ import { openEnding, openMenuWindow } from "./menu.js";
 import { processVirtueGain } from "./persistent_data.js";
 import { createMagmaElemental, scheduleStageEvent, scheduleUnclearableStageEvent } from "./stage_events.js";
 import { addVectors, clampNumber, clampVector, countTo, modulo, multiplyVectors, numberIsBounded, plusMinus1, polarToCartesian, randomCartesianVector, randomPolarVector, randomReal, ranint, rotateVector, shuffleArray, squaredDistance } from "./utility.js";
-import { amberShardRenderFunction, arrowBulletRenderFunction, blackHoleRenderFunction, circularRenderFunction, drawImage, memoryShardRenderFunction } from "./visuals.js";
+import { amberShardRenderFunction, arrowBulletRenderFunction, blackHoleRenderFunction, circularRenderFunction, drawImage, memoryShardRenderFunction, rectangularRenderFunction } from "./visuals.js";
 
 export const Bosses = {
 	zenryaku: {
@@ -1452,7 +1452,7 @@ export const Bosses = {
 							this.position[1] = this.position[1] * 0.98 - 4.8;
 							// After the 50th frame, grows from 6px to 40px. It then grows 4px more after each phase transition.
 							if (50 < t) {
-								this.radius = this.radius * 0.975 + 0.9 + 0.1 * Bosses.lexan.attacks.S10.currentPhase;
+								this.radius = this.radius * 0.975 + 0.9 + 0.1 * ((currentBoss.currentAttackTime > 8360) ? 6 : Bosses.lexan.attacks.S10.currentPhase);
 							}
 							// Attracts all other bullets according to the inverse square law and their `mass` property.
 							// All bullets for this spell card have a `velocity` property, and for the most part their motion is entirely governed by the black hole.
@@ -1461,6 +1461,7 @@ export const Bosses = {
 							for (let bulletId of Object.keys(bullets)) {
 								if (bulletId != this.id) { // Prevent division by zero
 									bullets[bulletId].velocity = addVectors(bullets[bulletId].velocity, polarToCartesian(fieldStrength / (squaredDistance(bullets[bulletId].position, this.position) * bullets[bulletId].mass), angleToObject(bullets[bulletId].position, this.position)));
+									if (bullets[bulletId].mass === 0.5) console.log(bullets[bulletId].velocity)
 									bullets[bulletId].position = addVectors(bullets[bulletId].position, bullets[bulletId].velocity);
 									if (squaredDistance(bullets[bulletId].position, this.position) < Math.max(1600, squaredDistance(bullets[bulletId].velocity, [0, 0]))) { // Account for bullets moving so fast they get accelerated through the hole and out the other side.
 										delete bullets[bulletId];
@@ -1560,6 +1561,24 @@ export const Bosses = {
 										this.position[0] = 1000;
 									}
 								}, circularRenderFunction(9, "#cc9900", "#fac112"), radialCollisionCheck(9), undefined, undefined, {velocity: startingVelocity, mass: 8});
+							}
+						}
+					}
+					// Phase 5 (rage phase). Creates spirals of bullets.
+					if (t === 8360) {
+						playAudio("se_tan00", "EN", 0.7); // Phase transition sound effect.
+					}
+					if (t > 8360) {
+						if (t % 5 === 0) {
+							playAudio("se_kira00", "EN", 0.12);
+						}
+						if (t % [6, 5, 4, 3][difficulty] === 0) {
+							let totalSpirals = [3, 4, 5, 6][difficulty];
+							let principalAngle = t * Math.PI / (totalSpirals * [6, 5, 4, 3][difficulty] * (1 + Math.sqrt(5)));
+							let speedMult = 1 + (t - 8360) / 1500;
+							for (let bulletNum = 0; bulletNum < totalSpirals; bulletNum++) {
+								let angle = principalAngle + Math.PI * 2 * bulletNum / totalSpirals;
+								createBullet(addVectors(polarToCartesian(-610, angle), [0, -240]), function() {}, rectangularRenderFunction(10, 10, "#254374", "#4a86e8", angle + Math.PI / 4), radialCollisionCheck(5), undefined, undefined, {angle: angle, velocity: polarToCartesian([1.5, 1.8, 2.2, 2.7][difficulty] * speedMult, angle), mass: 0.5});
 							}
 						}
 					}
@@ -1923,7 +1942,7 @@ export const dialogueList = {
 		onAdvance: function() {
 			endCutscene();
 			currentDialogueId = undefined;
-//			skipPhases(6);
+//			skipPhases(9);
 		}
 	},
 	// Lexan's post-fight dialogue
@@ -2019,7 +2038,9 @@ export function advanceDialogue() {
 	}
 }
 export function clearCurrentDialogue() {
-	currentDialogueId = undefined;
+	currentDialogueId = undefined;	
+	document.getElementById("div_dialogueName").style.opacity = 0;
+	document.getElementById("div_dialogueText").style.opacity = 0;
 }
 export function showBossTitleCard(bossId) {
 	document.getElementById("div_dialogueBossTitle").style.opacity = 1;

@@ -360,8 +360,8 @@ export function useContinue() {
 	processVirtueGain();
 	continuesLeft--;
 	score = 3 - continuesLeft;
-	lives = 0;
-	bombs = 0;
+	lives = upgradeEffectValues.startingLives; // We store these as a number of pieces rather than a number of the actual item.
+	bombs = upgradeEffectValues.startingBombs;
 	power = 400;
 	gameOverScreenActive = false;
 	playerPosition[0] = 0;
@@ -513,21 +513,21 @@ export function spellCardBonus() {
 // Processes the stage clear bonus.
 export function stageClearBonus() {
 	let out = 1000;
-	document.getElementById("span_stageClearBonus_stage").innerText = 1000;
+	document.getElementById("span_stageClearBonus_stage").innerText = formatInteger(1000);
 	out += power * 5;
-	document.getElementById("span_stageClearBonus_power").innerText = power * 5;
+	document.getElementById("span_stageClearBonus_power").innerText = formatInteger(power * 5);
 	out += graze * 5;
-	document.getElementById("span_stageClearBonus_graze").innerText = graze * 5;
+	document.getElementById("span_stageClearBonus_graze").innerText = formatInteger(graze * 5);
 	out *= pointItemsCollected;
-	document.getElementById("span_stageClearBonus_pointItems").innerText = "× " + pointItemsCollected;
+	document.getElementById("span_stageClearBonus_pointItems").innerText = "× " + formatInteger(pointItemsCollected);
 	out += Math.floor(lives / 3) * 1000000 + (lives % 3) * 250000;
-	document.getElementById("span_stageClearBonus_lives").innerText = Math.floor(lives / 3) * 1000000 + (lives % 3) * 250000;
+	document.getElementById("span_stageClearBonus_lives").innerText = formatInteger(Math.floor(lives / 3) * 1000000 + (lives % 3) * 250000);
 	out += Math.floor(bombs / 3) * 200000 + (bombs % 3) * 50000;
-	document.getElementById("span_stageClearBonus_bombs").innerText = Math.floor(bombs / 3) * 200000 + (bombs % 3) * 50000;
+	document.getElementById("span_stageClearBonus_bombs").innerText = formatInteger(Math.floor(bombs / 3) * 200000 + (bombs % 3) * 50000);
 	out *= [0.8, 1, 1.2, 1.5][difficulty];
 	document.getElementById("span_stageClearBonus_difficulty").innerText = "× " + [0.8, 1, 1.2, 1.5][difficulty].toFixed(1);
 	score += Math.round(out / 10) * 10;
-	document.getElementById("span_stageClearBonus_total").innerText = Math.round(out / 10) * 10;
+	document.getElementById("span_stageClearBonus_total").innerText = formatInteger(Math.round(out / 10) * 10);
 	document.getElementById("div_stageClearBonus").style.opacity = 1;
 	scheduleStageEvent(200, function() {
 		document.getElementById("div_stageClearBonus").style.opacity = 0;
@@ -623,14 +623,14 @@ function processFrame() {
 				enemies[currentBoss.enemyId].damageModifier = 1;
 			}
 			let potentialCapture = true;
-			if (currentBoss.currentAttackTime === attackData.maxFrames) { // If the attack is timed out.
+			if (currentBoss.currentAttackTime >= attackData.maxFrames) { // If the attack is timed out.
 				enemyData.HP = 0;
 				if (!attackData.isSurvival) {
 					potentialCapture = false;
 				}
 			}
 			if (enemyData.HP <= 0) {
-				if (attackData.slowDefeat) { // Prevent the boss from being defeated for 2 seconds while the game slows down on the last spell.
+				if (attackData.slowDefeat && (currentBoss.currentAttackTime < attackData.maxFrames)) { // Prevent the boss from being defeated for 1.6 seconds while the game slows down on the last spell.
 					playAudio("se_enep01", "EN");
 					attackData.slowDefeat = false;
 					finalSpellSlowdown = true;
@@ -799,13 +799,11 @@ function processFrame() {
 		}
 	}
 	// Process any bonus before dealing with the motion of items.
-	if (!Bosses.lexan.isDefeated) {
-		if (score >= scoreForNextBonus()) { // Run this in an if rather than a while to prevent audio spam if multiple bonuses are obtained at once (e.g. when Lexan's 9th is captured)
-			playAudio("se_bonus", "PL");
-		}
-		while (score >= scoreForNextBonus()) {
-			processScoreBonus();
-		}
+	if (score >= scoreForNextBonus()) { // Run this in an if rather than a while to prevent audio spam if multiple bonuses are obtained at once (e.g. when Lexan's 9th is captured)
+		playAudio("se_bonus", "PL");
+	}
+	while (score >= scoreForNextBonus()) {
+		processScoreBonus();
 	}
 	// Process the motion of items, and collect any items within the collection radius.
 	let itemIds = Object.keys(items);

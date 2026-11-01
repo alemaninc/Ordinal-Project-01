@@ -464,7 +464,7 @@ export function drawCanvas() {
 	}
 	// Finally, update the sidebar.
 	document.getElementById("sidebar_score").innerText = formatInteger(Math.min(score, 999999999));
-	document.getElementById("sidebar_bonusScore").innerText = formatInteger(Bosses.lexan.isDefeated ? 999999999 : Math.min(scoreForNextBonus(), 999999999));
+	document.getElementById("sidebar_bonusScore").innerText = formatInteger(Math.min(scoreForNextBonus(), 999999999));
 	document.getElementById("sidebar_bonusType").innerText = (collectedScoreBonuses % 15 === 14) ? "(Extend)" : (collectedScoreBonuses % 5 === 4) ? "(Spell Card)" : (collectedScoreBonuses % 3 === 2) ? "(Life Piece)" : "(Bomb Piece)";
 	document.getElementById("sidebar_bonusType").style.color = (collectedScoreBonuses % 15 === 14) ? "#cc66cc" : (collectedScoreBonuses % 5 === 4) ? "#66cc66" : (collectedScoreBonuses % 3 === 2) ? "#e6b3e6" : "#b3e6b3";
 	document.getElementById("sidebar_lives").innerHTML = (lives > 24) ? ("♥ × " + Math.floor(lives / 3)) : ("<span style=\"color: #cc66cc;\">" + "♥".repeat(Math.floor(lives / 3)) + "</span>" + ((lives % 3 === 0) ? "" : "<span style=\"background:conic-gradient(#cc66cc 0%, #cc66cc " + ((lives % 3) * 100 / 3) + "%, #333333 " + ((lives % 3) * 100 / 3) + "%, #333333); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;\">♥</span>") + "<span style=\"color: #333333;\">" + "♥".repeat(Math.floor(8 - lives / 3)) + "</span>");

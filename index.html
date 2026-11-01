@@ -369,7 +369,7 @@
 					<p>Each boss has multiple life bars; this is represented by a number to the left of the visible life bar. For example, "2" indicates that the boss has 2 more life bars in addition to the current one.</p>
 					<p>Bosses alternate between using normal attacks (shown as white sections of the boss life bar) and spell cards (shown as coloured sections of the boss life bar).</p>
 					<p>Normal attacks are incrementally stronger versions of the boss's basic attack.</p>
-					<p>Spell cards bedazzle the player with bullets crafted specifically for use in that spell card. While a spell card is active, the background will change and the </p>
+					<p>Spell cards bedazzle the player with bullets crafted specifically for use in that spell card. While a spell card is active, the background will change and the name of the spell card will be shown at the top of the screen.</p>
 					<p>Each boss attack is also accompanied by a timer; if the timer runs out, the boss will move on to its next attack even if the life bar for the current phase has not been drained.</p>
 				</div>
 				<div class="manualDiv" style="display: none;">
@@ -392,6 +392,7 @@
 				<div class="manualDiv" style="display: none;">
 					<h3>Item List (Continued)</h3>
 					<table class="manualItemTable">
+						<tr style="color: #cccc00;"><td><img src="assets/img/item_deletedbullet.png"></td><td>Bullet Item</td><td>Created when bullets are cleared during boss transitions. Gives 10 score. Always autocollected.</td></tr>
 						<tr style="color: #e6b3e6;"><td><img src="assets/img/item_lifepiece.png"></td><td>Life Piece</td><td>Collecting three of these gives an extra life.</td></tr>
 						<tr style="color: #b3e6b3;"><td><img src="assets/img/item_bombpiece.png"></td><td>Bomb Piece</td><td>Collecting three of these gives an extra bomb.</td></tr>
 						<tr style="color: #cc66cc;"><td><img src="assets/img/item_extend.png"></td><td>Extend</td><td>Gives an extra life.</td></tr>
@@ -446,6 +447,15 @@
 					<span style="color: #ccccff; font-weight: 700; font-size: 30px;">Changelog</span>
 				</div>
 				<div class="changelogDiv">
+					<h3>Version OP01.7 (2026-11-01)</h3>
+					<ul>
+						<li>Using a continue now restarts with 2 lives and 2 bombs (instead of 0).</li>
+						<li>Numbers in the display of the no continue clear bonus are now properly formatted.</li>
+						<li>Score bonuses can now be gained even after the no-continue clear bonus is applied. However, any items gained this way will not contribute to the bonus.</li>
+						<li>Lexan's final spell now has a rage phase if the timer runs down to 30 seconds.</li>
+					</ul>
+				</div>
+				<div class="changelogDiv" style="display: none;">
 					<h3>Version OP01.6 (2026-10-31)</h3>
 					<ul>
 						<li>Grazing bullets while invincible now deletes them.</li>
