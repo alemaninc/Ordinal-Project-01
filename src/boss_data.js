@@ -1923,7 +1923,7 @@ export const dialogueList = {
 		onAdvance: function() {
 			endCutscene();
 			currentDialogueId = undefined;
-			skipPhases(6);
+//			skipPhases(6);
 		}
 	},
 	// Lexan's post-fight dialogue
